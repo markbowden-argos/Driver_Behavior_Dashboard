@@ -217,17 +217,23 @@
     var FLEET    = {};
     var API_REF  = null;
 
-    // ---- Geotab Add-In registration ----------------------------
-    geotab.addin.DriverBehaviorDashboard = function() {
-      return {
+  // Add 'elt' and 'service' here
+geotab.addin.DriverBehaviorDashboard = function(elt, service) { 
+    return {
         initialize: function(api, state, callback) {
-          API_REF = api;
-          loadData(callback);
+            API_REF = api;
+            // It's a good idea to ensure loadData handles the callback 
+            // correctly to tell Geotab the 'loading' state is finished.
+            loadData(callback);
         },
-        focus: function(api, state) {},
-        blur:  function(api, state) {}
-      };
+        focus: function(api, state) {
+            // This is called every time the user clicks your menu item
+        },
+        blur: function(api, state) {
+            // This is called when the user navigates away
+        }
     };
+};
 
     // ---- Data loading ------------------------------------------
     function loadData(callback) {
