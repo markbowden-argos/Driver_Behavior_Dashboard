@@ -217,7 +217,8 @@
     vertical-align: middle; color: var(--text);
   }
   table.perf tr:last-child td { border-bottom: 0; }
-  table.perf tr:hover td { background: #fafbfc; }
+  table.perf tr.zebra td { background: #f7f9fc; }
+  table.perf tr:hover td { background: #eef4ff; }
 
   .driver-cell { display: flex; align-items: center; gap: 10px; }
   .avatar {
@@ -533,7 +534,7 @@
 (function() {
   "use strict";
 
-  var VERSION = "1.0.8";
+  var VERSION = "1.0.9";
 
   // Exception rule mapping - adjust these to match your database
   var TRACKED_RULES = [
@@ -1200,10 +1201,10 @@
       var r = rows[i];
       var scoreCls = scoreClass(r.score30);
       var d = deltaScore(r.score30, r.scorePrev);
-      html += '<tr>' +
+      var zebra = (i % 2 === 1) ? ' class="zebra"' : '';
+      html += '<tr' + zebra + '>' +
         '<td><div class="driver-cell">' +
-          '<div class="avatar" style="background:' + avatarColor(r.name) + ';">' + esc(initials(r.name)) + '</div>' +
-          '<div><div class="driver-name driver-name-link">' + esc(r.name) + '</div></div>' +
+          '<div class="driver-name driver-name-link">' + esc(r.name) + '</div>' +
         '</div></td>' +
         '<td class="num"><span class="score-pill ' + scoreCls + '">' + r.score30.toFixed(0) + '</span></td>' +
         '<td class="num"><span class="delta ' + d.cls + '">' + d.arrow + ' ' + esc(d.txt) + '</span></td>' +
@@ -1381,6 +1382,29 @@
     // Coaching/activity chart
     forceStyle(".coaching-chart", "display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:8px;");
     forceStyle(".coaching-col", "flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;");
+    forceStyle(".coaching-val", "font-size:10px;font-weight:600;color:#374151;font-variant-numeric:tabular-nums;");
+    forceStyle(".coaching-lbl", "font-size:10px;color:#6b7280;margin-top:4px;white-space:nowrap;");
+    // Preserve per-bar heights set during render, force rest
+    var cbars = document.querySelectorAll(".coaching-bar");
+    for (var c = 0; c < cbars.length; c++) {
+      var cHeight = cbars[c].style.height || "2px";
+      cbars[c].style.cssText = "height:" + cHeight + ";width:100%;max-width:26px;background:#10b981;border-radius:3px 3px 0 0;min-height:2px;";
+    }
+
+    // Driver performance table: zebra striping + cell padding (iframe strips table CSS aggressively)
+    forceStyle("table.perf td", "padding:12px 14px;border-bottom:1px solid #f1f3f7;vertical-align:middle;color:#1a1f36;");
+    forceStyle("table.perf th", "background:#f7f9fc;color:#6b7280;font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid #f1f3f7;text-transform:uppercase;font-size:10px;letter-spacing:0.04em;position:sticky;top:0;z-index:1;white-space:nowrap;");
+    forceStyle(".driver-cell", "display:flex;align-items:center;gap:10px;");
+    forceStyle(".driver-name", "font-weight:500;color:#1a1f36;font-size:13px;");
+    forceStyle(".driver-name-link", "color:#2563eb;cursor:pointer;");
+    // Zebra row background — force it on every cell of zebra rows
+    var zebraRows = document.querySelectorAll("table.perf tr.zebra");
+    for (var z = 0; z < zebraRows.length; z++) {
+      var tds = zebraRows[z].querySelectorAll("td");
+      for (var zt = 0; zt < tds.length; zt++) {
+        tds[zt].style.background = "#f7f9fc";
+      }
+    }
 
     // Hide classes
     var hiddens = document.querySelectorAll(".hidden");
