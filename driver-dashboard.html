@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Driver Behavior Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: #f3f4f6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .hdr {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+  }
+  .hdr h1 { font-size: 22px; font-weight: 700; color: #111827; }
+  .hdr .sub { color: #6b7280; font-size: 13px; margin-top: 2px; }
+  .hdr .meta { display: flex; align-items: center; gap: 10px; color: #6b7280; font-size: 12px; }
+  .ver-pill {
+    background: #eef2ff; color: #4338ca; border-radius: 999px;
+    padding: 3px 10px; font-size: 11px; font-weight: 600;
+  }
+  .refresh-btn {
+    background: #111827; color: #fff; border: 0; border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .refresh-btn:hover { background: #1f2937; }
+  .refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* KPI cards */
+  .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 1200px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px)  { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+
+  .card {
+    background: #fff; border-radius: 12px; padding: 16px;
+    box-shadow: 0 1px 3px rgba(17,24,39,0.06), 0 1px 2px rgba(17,24,39,0.04);
+    border: 1px solid #eef1f5;
+  }
+  .kpi .lbl { font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .kpi .val { font-size: 28px; font-weight: 700; color: #111827; margin-top: 6px; line-height: 1; }
+  .kpi .delta {
+    display: inline-flex; align-items: center; gap: 3px; margin-top: 8px;
+    font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  }
+  .delta.up   { background: #dcfce7; color: #166534; }
+  .delta.down { background: #fee2e2; color: #991b1b; }
+  .delta.flat { background: #f3f4f6; color: #6b7280; }
+
+  /* Panel row */
+  .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  @media (max-width: 980px) { .panel-row { grid-template-columns: 1fr; } }
+  .panel-title { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 14px; }
+  .panel-sub { color: #6b7280; font-size: 12px; margin-top: -10px; margin-bottom: 14px; }
+
+  /* Score rings */
+  .rings { display: flex; justify-content: space-around; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ring-wrap .lbl { color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .ring-svg { position: relative; width: 120px; height: 120px; }
+  .ring-svg .txt {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-svg .txt .big { font-size: 24px; font-weight: 700; color: #111827; }
+  .ring-svg .txt .sml { font-size: 10px; color: #6b7280; }
+
+  /* Behavior bars */
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 50px; gap: 10px; align-items: center; font-size: 12px; }
+  .bar-row .n { color: #374151; font-weight: 500; }
+  .bar-track { background: #f3f4f6; border-radius: 999px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+  .bar-row .c { color: #6b7280; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* Filter chips */
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+    background: #fff; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid #eef1f5;
+    box-shadow: 0 1px 3px rgba(17,24,39,0.06), 0 1px 2px rgba(17,24,39,0.04);
+  }
+  .chip {
+    background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+    border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .chip:hover { background: #e5e7eb; }
+  .chip.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+  /* Driver table */
+  .table-card { padding: 0; overflow: hidden; }
+  .table-header { padding: 14px 18px; border-bottom: 1px solid #f1f2f5; }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: #fafbfc; color: #6b7280; text-align: left; font-weight: 600;
+    padding: 10px 14px; border-bottom: 1px solid #eef1f5;
+    text-transform: uppercase; font-size: 11px; letter-spacing: 0.03em;
+    position: sticky; top: 0;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tr:hover td { background: #fafbfc; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.ctr, td.ctr { text-align: center; }
+
+  .driver-cell { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 600; font-size: 12px; flex-shrink: 0;
+  }
+  .driver-name { font-weight: 600; color: #111827; }
+  .driver-id { font-size: 11px; color: #9ca3af; }
+
+  .score-pill {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    font-weight: 700; font-size: 12px; min-width: 46px; text-align: center;
+  }
+  .score-a { background: #dcfce7; color: #166534; }
+  .score-b { background: #dbeafe; color: #1e40af; }
+  .score-c { background: #fef3c7; color: #92400e; }
+  .score-d { background: #fee2e2; color: #991b1b; }
+
+  .delta-pill { font-weight: 600; font-size: 12px; }
+  .delta-up   { color: #166534; }
+  .delta-down { color: #991b1b; }
+  .delta-flat { color: #6b7280; }
+
+  .warn { color: #b45309; font-weight: 600; }
+  .ok   { color: #374151; }
+
+  .flag {
+    display: inline-block; background: #fef3c7; color: #92400e;
+    padding: 2px 7px; border-radius: 4px; font-size: 10px;
+    font-weight: 600; margin-right: 4px; text-transform: uppercase;
+  }
+  .flag.cam { background: #ede9fe; color: #5b21b6; }
+
+  /* States */
+  .loader-wrap {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 360px; gap: 14px;
+  }
+  .spinner {
+    width: 38px; height: 38px; border: 3px solid #e5e7eb;
+    border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { color: #6b7280; font-size: 13px; }
+
+  .error-card {
+    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+    padding: 14px 18px; border-radius: 12px; font-size: 13px;
+  }
+  .error-card .t { font-weight: 700; margin-bottom: 4px; }
+
+  .notice-card {
+    background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+    padding: 12px 16px; border-radius: 10px; font-size: 12px; margin-bottom: 14px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div>
+      <h1>Driver Behavior Dashboard</h1>
+      <div class="sub">Last 30 days - scores, trends, and exception events</div>
+    </div>
+    <div class="meta">
+      <span class="ver-pill" id="verPill">v1.0.3</span>
+      <span id="refreshedAt"></span>
+      <button class="refresh-btn" id="refreshBtn">Refresh</button>
+    </div>
+  </div>
+
+  <div id="notice" class="notice-card hidden"></div>
+  <div id="error"  class="error-card hidden"></div>
+
+  <div id="loader" class="loader-wrap">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loaderMsg">Loading fleet data...</div>
+  </div>
+
+  <div id="content" class="hidden">
+
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="panel-row">
+      <div class="card">
+        <div class="panel-title">Fleet Score Overview</div>
+        <div class="panel-sub">30-day average compared to previous periods</div>
+        <div class="rings" id="ringsPanel"></div>
+      </div>
+      <div class="card">
+        <div class="panel-title">Behavior Events - Last 30 Days</div>
+        <div class="panel-sub">Breakdown by exception rule category</div>
+        <div class="bars" id="barsPanel"></div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="chip active" data-filter="all">All drivers</button>
+      <button class="chip" data-filter="risk">At-risk (score below 70)</button>
+      <button class="chip" data-filter="camera">Camera events</button>
+      <button class="chip" data-filter="top">Top performers</button>
+      <button class="chip" data-filter="improved">Most improved</button>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="panel-title" style="margin-bottom: 2px;">Driver Scorecard</div>
+        <div class="panel-sub" style="margin: 0;">Ranked by 30-day score - color-coded by grade</div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="driverTable">
+          <thead>
+            <tr>
+              <th>Driver</th>
+              <th class="num">30-Day Score</th>
+              <th class="num">vs. Prev Month</th>
+              <th class="num">YTD Score</th>
+              <th class="num">Miles</th>
+              <th class="num" id="colSpeed">Speeding</th>
+              <th class="num" id="colBrake">Hard Braking</th>
+              <th class="num" id="colAccel">Hard Accel</th>
+              <th class="num" id="colDistract">Distracted</th>
+              <th class="num" id="colPhone">Phone Use</th>
+              <th class="num" id="colSeat">Seat Belt</th>
+              <th class="ctr">Flags</th>
+            </tr>
+          </thead>
+          <tbody id="driverBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  var VERSION = "1.0.3";
+
+  // ========== CONFIG ==========
+  // Update these to match your actual MyGeotab exception rule names.
+  // Run listRules() in API Runner to see what names your database uses.
+  var TRACKED_RULES = [
+    { key: "speeding",   label: "Speeding",        names: ["Speeding", "Speeding Violation", "Posted Speed"], maxRate: 8, weight: 0.25 },
+    { key: "hardBrake",  label: "Hard Braking",    names: ["Harsh Braking", "Hard Braking", "Harsh braking"], maxRate: 6, weight: 0.20 },
+    { key: "hardAccel",  label: "Hard Accel",      names: ["Harsh Acceleration", "Hard Acceleration"],        maxRate: 6, weight: 0.15 },
+    { key: "distracted", label: "Distracted",      names: ["Distracted Driving", "Distraction"],              maxRate: 5, weight: 0.15 },
+    { key: "phone",      label: "Phone Use",       names: ["Phone Use", "Cell Phone Use", "Mobile Phone"],    maxRate: 3, weight: 0.15 },
+    { key: "seatbelt",   label: "Seat Belt",       names: ["Seat Belt", "Seatbelt", "No Seat Belt"],          maxRate: 4, weight: 0.10 }
+  ];
+
+  // Rule rate thresholds are per 1,000 miles (imperial units)
+  var MS_PER_DAY = 86400000;
+  var METERS_TO_MILES = 0.000621371;
+
+  // ========== STATE ==========
+  var allRows = [];
+  var currentFilter = "all";
+
+  // ========== DOM HELPERS ==========
+  function $(id) { return document.getElementById(id); }
+  function show(id) { $(id).classList.remove("hidden"); }
+  function hide(id) { $(id).classList.add("hidden"); }
+  function esc(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c];
+    });
+  }
+
+  // ========== UTILITIES ==========
+  function isoDaysAgo(days) {
+    return new Date(Date.now() - days * MS_PER_DAY).toISOString();
+  }
+  function startOfYear() {
+    var d = new Date();
+    return new Date(d.getFullYear(), 0, 1).toISOString();
+  }
+
+  function driverDisplayName(u) {
+    var f = u.firstName || "";
+    var l = u.lastName || "";
+    var nm = (f + " " + l).trim();
+    if (nm) return nm;
+    return u.name || u.id || "Unknown driver";
+  }
+  function initials(name) {
+    var parts = name.split(/\s+/).filter(function(p) { return p.length > 0; });
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+  function avatarColor(name) {
+    var colors = ["#2563eb","#7c3aed","#db2777","#ea580c","#16a34a","#0891b2","#ca8a04","#dc2626","#9333ea","#059669"];
+    var hash = 0;
+    for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+    return colors[Math.abs(hash) % colors.length];
+  }
+  function grade(score) {
+    if (score >= 90) return "a";
+    if (score >= 80) return "b";
+    if (score >= 70) return "c";
+    return "d";
+  }
+  function deltaText(cur, prev) {
+    if (prev === null || prev === undefined || prev === 0) return { cls: "flat", txt: "-" };
+    var diff = cur - prev;
+    if (Math.abs(diff) < 0.1) return { cls: "flat", txt: "0.0" };
+    var pct = (diff / prev) * 100;
+    var sign = diff > 0 ? "+" : "";
+    var cls  = diff > 0 ? "up" : "down";
+    return { cls: cls, txt: sign + pct.toFixed(1) + "%" };
+  }
+
+  // ========== SCORING ==========
+  function computeScore(driverRow) {
+    var totalWeight = 0;
+    var weightedDeduction = 0;
+    var miles = driverRow.miles30 || 0;
+    // Avoid divide-by-zero: drivers with no miles default to 100
+    if (miles < 1) return 100;
+
+    for (var i = 0; i < TRACKED_RULES.length; i++) {
+      var rule = TRACKED_RULES[i];
+      var count = driverRow.counts30[rule.key] || 0;
+      var ratePerThousand = (count / miles) * 1000;
+      var deductionPct = Math.min(1, ratePerThousand / rule.maxRate);
+      weightedDeduction += deductionPct * rule.weight * 100;
+      totalWeight += rule.weight;
+    }
+    // Normalize to 0-100 (weighted average of deductions)
+    var finalScore = 100 - (weightedDeduction / (totalWeight || 1));
+    if (finalScore < 0) finalScore = 0;
+    if (finalScore > 100) finalScore = 100;
+    return finalScore;
+  }
+
+  // ========== API WRAPPER ==========
+  // Wraps api.multiCall in a Promise-like callback structure.
+  var apiRef = null;
+
+  function apiMulti(calls) {
+    return new Promise(function(resolve, reject) {
+      apiRef.multiCall(calls, function(results) {
+        resolve(results);
+      }, function(err) {
+        reject(err);
+      });
+    });
+  }
+  function apiSingle(method, params) {
+    return new Promise(function(resolve, reject) {
+      apiRef.call(method, params, function(res) { resolve(res); }, function(err) { reject(err); });
+    });
+  }
+
+  // ========== DATA LOAD ==========
+  function loadAll() {
+    $("loaderMsg").innerText = "Loading users and rules...";
+
+    var now30    = isoDaysAgo(0);
+    var past30   = isoDaysAgo(30);
+    var past60   = isoDaysAgo(60);
+    var yearStart = startOfYear();
+
+    // Batch 1: users and rules
+    var batch1 = [
+      ["Get", { typeName: "User", search: { isDriver: true }, resultsLimit: 5000 }],
+      ["Get", { typeName: "Rule", search: {},                 resultsLimit: 5000 }]
+    ];
+
+    return apiMulti(batch1).then(function(b1) {
+      var users = b1[0] || [];
+      var rules = b1[1] || [];
+
+      // Fallback: if isDriver filter returned nothing, pull all users
+      if (!users.length) {
+        return apiMulti([["Get", { typeName: "User", search: {}, resultsLimit: 5000 }]])
+          .then(function(r) { return { users: r[0] || [], rules: rules }; });
+      }
+      return { users: users, rules: rules };
+    }).then(function(ctx) {
+      var users = ctx.users;
+      var rules = ctx.rules;
+
+      // Match rule IDs to our TRACKED_RULES by name
+      var ruleIdToKey = {};
+      var matchedCount = 0;
+      for (var i = 0; i < TRACKED_RULES.length; i++) {
+        var tr = TRACKED_RULES[i];
+        for (var j = 0; j < rules.length; j++) {
+          var rName = (rules[j].name || "").toLowerCase();
+          for (var k = 0; k < tr.names.length; k++) {
+            if (rName === tr.names[k].toLowerCase() || rName.indexOf(tr.names[k].toLowerCase()) !== -1) {
+              ruleIdToKey[rules[j].id] = tr.key;
+              matchedCount++;
+              break;
+            }
+          }
+          if (ruleIdToKey[rules[j].id] === tr.key) break;
+        }
+      }
+
+      if (matchedCount < TRACKED_RULES.length) {
+        var msg = "Matched " + matchedCount + " of " + TRACKED_RULES.length + " tracked rules. Run listRules() in the console to see all rule names, then update TRACKED_RULES at the top of driver-dashboard.html.";
+        showNotice(msg);
+      }
+
+      $("loaderMsg").innerText = "Loading events and trips...";
+
+      // Batch 2: exception events (3 periods) + trips (3 periods) + media
+      var batch2 = [
+        ["Get", { typeName: "ExceptionEvent", search: { fromDate: past30,    toDate: now30  }, resultsLimit: 50000 }],
+        ["Get", { typeName: "ExceptionEvent", search: { fromDate: past60,    toDate: past30 }, resultsLimit: 50000 }],
+        ["Get", { typeName: "ExceptionEvent", search: { fromDate: yearStart, toDate: now30  }, resultsLimit: 50000 }],
+        ["Get", { typeName: "Trip",           search: { fromDate: past30,    toDate: now30  }, resultsLimit: 50000 }],
+        ["Get", { typeName: "Trip",           search: { fromDate: past60,    toDate: past30 }, resultsLimit: 50000 }],
+        ["Get", { typeName: "Trip",           search: { fromDate: yearStart, toDate: now30  }, resultsLimit: 50000 }]
+      ];
+
+      return apiMulti(batch2).then(function(b2) {
+        return {
+          users: users,
+          ruleIdToKey: ruleIdToKey,
+          events30:   b2[0] || [],
+          eventsPrev: b2[1] || [],
+          eventsYTD:  b2[2] || [],
+          trips30:    b2[3] || [],
+          tripsPrev:  b2[4] || [],
+          tripsYTD:   b2[5] || []
+        };
+      });
+    }).then(function(data) {
+      $("loaderMsg").innerText = "Loading camera events...";
+
+      // Camera/media events - safe fallback if not supported
+      return apiMulti([
+        ["Get", { typeName: "MediaFile", search: { fromDate: data.trips30.length ? isoDaysAgo(30) : isoDaysAgo(30) }, resultsLimit: 5000 }]
+      ]).then(function(mres) {
+        data.media = mres[0] || [];
+        return data;
+      }, function() {
+        data.media = [];
+        return data;
+      });
+    });
+  }
+
+  // ========== TRANSFORM ==========
+  function buildDriverRows(data) {
+    var userById = {};
+    var rows = [];
+    for (var u = 0; u < data.users.length; u++) {
+      var usr = data.users[u];
+      userById[usr.id] = usr;
+      rows.push({
+        id: usr.id,
+        name: driverDisplayName(usr),
+        counts30:   emptyCounts(),
+        countsPrev: emptyCounts(),
+        countsYTD:  emptyCounts(),
+        miles30: 0, milesPrev: 0, milesYTD: 0,
+        cameraEvents: 0,
+        flags: []
+      });
+    }
+    var rowById = {};
+    for (var r = 0; r < rows.length; r++) rowById[rows[r].id] = rows[r];
+
+    tallyEvents(data.events30,   rowById, data.ruleIdToKey, "counts30");
+    tallyEvents(data.eventsPrev, rowById, data.ruleIdToKey, "countsPrev");
+    tallyEvents(data.eventsYTD,  rowById, data.ruleIdToKey, "countsYTD");
+    tallyTrips(data.trips30,   rowById, "miles30");
+    tallyTrips(data.tripsPrev, rowById, "milesPrev");
+    tallyTrips(data.tripsYTD,  rowById, "milesYTD");
+
+    // Camera events - attach to driver via driver ID in MediaFile
+    for (var m = 0; m < data.media.length; m++) {
+      var mf = data.media[m];
+      var did = (mf.driver && mf.driver.id) ? mf.driver.id : null;
+      if (did && rowById[did]) {
+        rowById[did].cameraEvents++;
+      }
+    }
+
+    // Compute scores and flags
+    for (var s = 0; s < rows.length; s++) {
+      var row = rows[s];
+      row.score30   = computeScore({ miles30: row.miles30,   counts30: row.counts30   });
+      row.scorePrev = computeScore({ miles30: row.milesPrev, counts30: row.countsPrev });
+      row.scoreYTD  = computeScore({ miles30: row.milesYTD,  counts30: row.countsYTD  });
+
+      if (row.counts30.phone      > 2) row.flags.push({ type: "phone", text: "Phone" });
+      if (row.counts30.distracted > 3) row.flags.push({ type: "dist",  text: "Distracted" });
+      if (row.cameraEvents        > 0) row.flags.push({ type: "cam",   text: row.cameraEvents + " cam" });
+    }
+
+    // Sort by 30-day score descending
+    rows.sort(function(a, b) { return b.score30 - a.score30; });
+    return rows;
+  }
+
+  function emptyCounts() {
+    var o = {};
+    for (var i = 0; i < TRACKED_RULES.length; i++) o[TRACKED_RULES[i].key] = 0;
+    return o;
+  }
+
+  function tallyEvents(events, rowById, ruleIdToKey, bucket) {
+    for (var i = 0; i < events.length; i++) {
+      var ev = events[i];
+      // driver can be at driver.id or device.driver.id depending on schema
+      var dId = null;
+      if (ev.driver && ev.driver.id) dId = ev.driver.id;
+      if (!dId) continue;
+      var row = rowById[dId];
+      if (!row) continue;
+      var ruleId = ev.rule && ev.rule.id ? ev.rule.id : null;
+      var key = ruleIdToKey[ruleId];
+      if (!key) continue;
+      row[bucket][key] = (row[bucket][key] || 0) + 1;
+    }
+  }
+
+  function tallyTrips(trips, rowById, bucket) {
+    for (var i = 0; i < trips.length; i++) {
+      var t = trips[i];
+      var dId = t.driver && t.driver.id ? t.driver.id : null;
+      if (!dId) continue;
+      var row = rowById[dId];
+      if (!row) continue;
+      var meters = typeof t.distance === "number" ? t.distance : 0;
+      row[bucket] = (row[bucket] || 0) + (meters * METERS_TO_MILES);
+    }
+  }
+
+  // ========== RENDER ==========
+  function renderAll(rows) {
+    allRows = rows;
+    renderKpis(rows);
+    renderRings(rows);
+    renderBars(rows);
+    renderTable(rows);
+    $("refreshedAt").innerText = "Updated " + new Date().toLocaleTimeString();
+  }
+
+  function avgScore(rows, field) {
+    if (!rows.length) return 0;
+    var s = 0, n = 0;
+    for (var i = 0; i < rows.length; i++) {
+      if (typeof rows[i][field] === "number") { s += rows[i][field]; n++; }
+    }
+    return n ? s / n : 0;
+  }
+  function sumField(rows, field) {
+    var s = 0;
+    for (var i = 0; i < rows.length; i++) s += rows[i][field] || 0;
+    return s;
+  }
+  function sumCounts(rows, bucket) {
+    var total = 0;
+    for (var i = 0; i < rows.length; i++) {
+      for (var k in rows[i][bucket]) total += rows[i][bucket][k];
+    }
+    return total;
+  }
+
+  function renderKpis(rows) {
+    var score30  = avgScore(rows, "score30");
+    var scorePrev = avgScore(rows, "scorePrev");
+    var scoreYTD  = avgScore(rows, "scoreYTD");
+    var totalInc30   = sumCounts(rows, "counts30");
+    var totalIncPrev = sumCounts(rows, "countsPrev");
+    var totalCam = sumField(rows, "cameraEvents");
+    var activeDrivers = rows.filter(function(r) { return r.miles30 > 0; }).length;
+
+    var d1 = deltaText(score30, scorePrev);
+    var d2 = { cls: "flat", txt: scorePrev.toFixed(1) };
+    var d3 = deltaText(score30, scoreYTD);
+    var d4 = deltaText(totalIncPrev, totalInc30); // fewer is better; invert
+    if (d4.cls === "up") d4.cls = "down"; else if (d4.cls === "down") d4.cls = "up";
+
+    var kpis = [
+      { lbl: "Fleet Score (30d)",   val: score30.toFixed(1),   delta: d1, deltaLbl: "vs. prev month" },
+      { lbl: "Previous Month",      val: scorePrev.toFixed(1), delta: d2, deltaLbl: "baseline"       },
+      { lbl: "YTD Average",         val: scoreYTD.toFixed(1),  delta: d3, deltaLbl: "vs. YTD"        },
+      { lbl: "Total Incidents",     val: totalInc30,           delta: d4, deltaLbl: "vs. prev month" },
+      { lbl: "Camera Events",       val: totalCam,             delta: { cls:"flat", txt:"30 days" }, deltaLbl: "" },
+      { lbl: "Active Drivers",      val: activeDrivers,        delta: { cls:"flat", txt: rows.length + " total" }, deltaLbl: "" }
+    ];
+
+    var html = "";
+    for (var i = 0; i < kpis.length; i++) {
+      var k = kpis[i];
+      html += '<div class="card kpi">' +
+              '<div class="lbl">' + esc(k.lbl) + '</div>' +
+              '<div class="val">' + esc(k.val) + '</div>' +
+              '<span class="delta ' + esc(k.delta.cls) + '">' + esc(k.delta.txt) + '</span> ' +
+              '<span style="font-size: 11px; color:#6b7280; margin-left: 6px;">' + esc(k.deltaLbl) + '</span>' +
+              '</div>';
+    }
+    $("kpiRow").innerHTML = html;
+  }
+
+  function ringSvg(score, label) {
+    var r = 45, c = 2 * Math.PI * r;
+    var pct = Math.max(0, Math.min(100, score)) / 100;
+    var offset = c * (1 - pct);
+    var color = "#16a34a";
+    if (score < 90) color = "#2563eb";
+    if (score < 80) color = "#d97706";
+    if (score < 70) color = "#dc2626";
+
+    return '<div class="ring-wrap">' +
+           '<div class="ring-svg">' +
+             '<svg width="120" height="120" viewBox="0 0 120 120">' +
+               '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="#f3f4f6" stroke-width="10"/>' +
+               '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="10" ' +
+                       'stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + offset + '" ' +
+                       'transform="rotate(-90 60 60)"/>' +
+             '</svg>' +
+             '<div class="txt"><div class="big">' + score.toFixed(1) + '</div><div class="sml">/ 100</div></div>' +
+           '</div>' +
+           '<div class="lbl">' + esc(label) + '</div>' +
+           '</div>';
+  }
+
+  function renderRings(rows) {
+    var html = ringSvg(avgScore(rows, "score30"),   "Last 30 Days") +
+               ringSvg(avgScore(rows, "scorePrev"), "Previous Month") +
+               ringSvg(avgScore(rows, "scoreYTD"),  "Year to Date");
+    $("ringsPanel").innerHTML = html;
+  }
+
+  function renderBars(rows) {
+    var totals = {};
+    var max = 0;
+    for (var i = 0; i < TRACKED_RULES.length; i++) {
+      var key = TRACKED_RULES[i].key;
+      totals[key] = 0;
+      for (var r = 0; r < rows.length; r++) totals[key] += rows[r].counts30[key] || 0;
+      if (totals[key] > max) max = totals[key];
+    }
+    var colors = ["#dc2626","#ea580c","#d97706","#ca8a04","#2563eb","#059669"];
+    var html = "";
+    for (var i2 = 0; i2 < TRACKED_RULES.length; i2++) {
+      var rule = TRACKED_RULES[i2];
+      var v = totals[rule.key];
+      var pct = max > 0 ? (v / max) * 100 : 0;
+      var color = colors[i2 % colors.length];
+      html += '<div class="bar-row">' +
+                '<div class="n">' + esc(rule.label) + '</div>' +
+                '<div class="bar-track"><div class="bar-fill" style="width:' + pct.toFixed(1) + '%; background:' + color + ';"></div></div>' +
+                '<div class="c">' + v + '</div>' +
+              '</div>';
+    }
+    $("barsPanel").innerHTML = html;
+  }
+
+  function filterRows(rows, f) {
+    if (f === "risk")     return rows.filter(function(r) { return r.score30 < 70; });
+    if (f === "camera")   return rows.filter(function(r) { return r.cameraEvents > 0; });
+    if (f === "top") {
+      var sorted = rows.slice().sort(function(a, b) { return b.score30 - a.score30; });
+      return sorted.slice(0, 10);
+    }
+    if (f === "improved") {
+      var withDelta = rows.filter(function(r) { return r.scorePrev > 0; });
+      return withDelta.sort(function(a, b) { return (b.score30 - b.scorePrev) - (a.score30 - a.scorePrev); }).slice(0, 10);
+    }
+    return rows;
+  }
+
+  function renderTable(rows) {
+    var filtered = filterRows(rows, currentFilter);
+    var html = "";
+    if (!filtered.length) {
+      html = '<tr><td colspan="12" style="padding: 32px; text-align:center; color:#6b7280;">No drivers match this filter.</td></tr>';
+    }
+    for (var i = 0; i < filtered.length; i++) {
+      var row = filtered[i];
+      var gr = grade(row.score30);
+      var d  = deltaText(row.score30, row.scorePrev);
+
+      var flagsHtml = "";
+      for (var f = 0; f < row.flags.length; f++) {
+        var fl = row.flags[f];
+        var cls = fl.type === "cam" ? "flag cam" : "flag";
+        flagsHtml += '<span class="' + cls + '">' + esc(fl.text) + '</span>';
+      }
+
+      html += '<tr>' +
+                '<td><div class="driver-cell">' +
+                  '<div class="avatar" style="background:' + avatarColor(row.name) + ';">' + esc(initials(row.name)) + '</div>' +
+                  '<div><div class="driver-name">' + esc(row.name) + '</div></div>' +
+                '</div></td>' +
+                '<td class="num"><span class="score-pill score-' + gr + '">' + row.score30.toFixed(1) + '</span></td>' +
+                '<td class="num"><span class="delta-pill delta-' + d.cls + '">' + esc(d.txt) + '</span></td>' +
+                '<td class="num">' + row.scoreYTD.toFixed(1) + '</td>' +
+                '<td class="num">' + Math.round(row.miles30) + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.speeding,   8)  + '">' + row.counts30.speeding   + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.hardBrake,  6)  + '">' + row.counts30.hardBrake  + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.hardAccel,  6)  + '">' + row.counts30.hardAccel  + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.distracted, 3)  + '">' + row.counts30.distracted + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.phone,      2)  + '">' + row.counts30.phone      + '</td>' +
+                '<td class="num ' + warnCls(row.counts30.seatbelt,   4)  + '">' + row.counts30.seatbelt   + '</td>' +
+                '<td class="ctr">' + flagsHtml + '</td>' +
+              '</tr>';
+    }
+    $("driverBody").innerHTML = html;
+  }
+
+  function warnCls(count, threshold) {
+    return count > threshold ? "warn" : "ok";
+  }
+
+  // ========== UI EVENTS ==========
+  function wireFilters() {
+    var chips = document.querySelectorAll(".chip");
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].addEventListener("click", function(e) {
+        var el = e.currentTarget;
+        for (var j = 0; j < chips.length; j++) chips[j].classList.remove("active");
+        el.classList.add("active");
+        currentFilter = el.getAttribute("data-filter");
+        renderTable(allRows);
+      });
+    }
+    $("refreshBtn").addEventListener("click", function() { run(); });
+  }
+
+  function showError(err) {
+    var msg = err && err.message ? err.message : (typeof err === "string" ? err : JSON.stringify(err));
+    $("error").innerHTML = '<div class="t">Unable to load dashboard data</div>' + esc(msg);
+    show("error");
+    hide("loader");
+  }
+  function showNotice(msg) {
+    $("notice").innerText = msg;
+    show("notice");
+  }
+
+  // ========== DIAGNOSTICS (callable from console) ==========
+  function listRules() {
+    if (!apiRef) { console.error("API not initialized"); return; }
+    apiRef.call("Get", { typeName: "Rule", search: {}, resultsLimit: 5000 }, function(rules) {
+      rules.sort(function(a, b) { return (a.name || "").localeCompare(b.name || ""); });
+      console.table(rules.map(function(r) { return { id: r.id, name: r.name }; }));
+      console.log("Found " + rules.length + " rules. Copy the names you want and update TRACKED_RULES in driver-dashboard.html.");
+    }, function(e) { console.error("listRules error:", e); });
+  }
+
+  // ========== MAIN ==========
+  function run() {
+    hide("content");
+    hide("error");
+    hide("notice");
+    show("loader");
+    $("refreshBtn").disabled = true;
+
+    loadAll().then(function(data) {
+      var rows = buildDriverRows(data);
+      renderAll(rows);
+      hide("loader");
+      show("content");
+      $("refreshBtn").disabled = false;
+    }).catch(function(err) {
+      console.error("[Dashboard]", err);
+      showError(err);
+      $("refreshBtn").disabled = false;
+    });
+  }
+
+  // ========== REGISTRATION ==========
+  function init() {
+    $("verPill").innerText = "v" + VERSION;
+    wireFilters();
+
+    if (typeof geotab !== "undefined" && geotab.addin) {
+      // Running inside MyGeotab - register the Add-In
+      geotab.addin.DriverBehaviorDashboard = function() {
+        return {
+          initialize: function(api, state, callback) {
+            apiRef = api;
+            // expose for console diagnostics
+            try { Object.defineProperty(window, "listRules", { value: listRules, configurable: true }); } catch (e) {}
+            callback();
+          },
+          focus: function(api, state) {
+            apiRef = api;
+            run();
+          },
+          blur: function() {}
+        };
+      };
+    } else {
+      // Running outside MyGeotab (direct browser load) - show notice
+      hide("loader");
+      show("error");
+      $("error").innerHTML = '<div class="t">Not running inside MyGeotab</div>' +
+        'This dashboard requires the MyGeotab API context. Open it through the MyGeotab Add-In menu. ' +
+        '(If you ARE seeing this inside MyGeotab, there is a configuration issue - check that the Add-In menuId matches "DriverBehaviorDashboard" in config.json.)';
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
