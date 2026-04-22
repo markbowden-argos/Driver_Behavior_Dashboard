@@ -533,7 +533,7 @@
 (function() {
   "use strict";
 
-  var VERSION = "1.0.7";
+  var VERSION = "1.0.8";
 
   // Exception rule mapping - adjust these to match your database
   var TRACKED_RULES = [
@@ -919,6 +919,9 @@
     renderTable();
     updateTabCounts(rows);
     $("refreshedAt").innerText = "Updated " + new Date().toLocaleTimeString();
+    // Re-apply inline styles after render so dynamically-created elements
+    // (trend bars, table rows, coaching bars) get forced styling too.
+    applyInlineStyles();
   }
 
   function renderScoreCard(rows) {
@@ -1234,6 +1237,7 @@
         el.classList.add("active");
         currentFilter = el.getAttribute("data-filter");
         renderTable();
+        applyInlineStyles();
       });
     }
     var ths = document.querySelectorAll("table.perf th");
@@ -1244,6 +1248,7 @@
         if (currentSort.key === key) currentSort.dir = currentSort.dir === "asc" ? "desc" : "asc";
         else { currentSort.key = key; currentSort.dir = "desc"; }
         renderTable();
+        applyInlineStyles();
       });
     }
     $("refreshBtn").addEventListener("click", function() { run(); });
@@ -1286,40 +1291,125 @@
   }
 
   // Force critical styles via inline attributes (bulletproof against CSS overrides)
+  // Idempotent: safe to call multiple times and after renders.
+  function forceStyle(selector, css) {
+    var nodes = document.querySelectorAll(selector);
+    for (var i = 0; i < nodes.length; i++) {
+      // Preserve existing inline styles (like bar heights) by appending
+      var existing = nodes[i].getAttribute("style") || "";
+      // Avoid infinite appending: strip any previous forced block marker
+      var marker = "/*forced*/";
+      var idx = existing.indexOf(marker);
+      if (idx >= 0) existing = existing.substring(0, idx);
+      nodes[i].setAttribute("style", existing + marker + css);
+    }
+  }
+
   function applyInlineStyles() {
-    document.body.style.cssText = "background:#f3f5f9 !important; margin:0; padding:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#1a1f36;";
-    var pg = document.querySelector(".page");
-    if (pg) pg.style.cssText = "max-width:1440px; margin:0 auto; padding:20px 24px 40px; display:block;";
-    var cards = document.querySelectorAll(".card");
-    for (var i = 0; i < cards.length; i++) {
-      cards[i].style.cssText += ";background:#ffffff;border:1px solid #eef0f4;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,24,40,0.08);position:relative;display:block;";
+    // Page-level
+    document.body.style.cssText = "background:#f3f5f9; margin:0; padding:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color:#1a1f36;";
+    forceStyle(".page", "max-width:1440px;margin:0 auto;padding:20px 24px 40px;display:block;");
+
+    // Topbar
+    forceStyle(".topbar", "display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px;");
+    forceStyle(".topbar .title-row", "display:flex;flex-direction:column;gap:6px;");
+    forceStyle(".topbar h1", "font-size:22px;font-weight:700;letter-spacing:-0.01em;color:#1a1f36;margin:0;");
+    forceStyle(".breadcrumb", "color:#6b7280;font-size:12px;display:flex;align-items:center;gap:4px;");
+    forceStyle(".topbar .meta-row", "display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#6b7280;");
+    forceStyle(".ver-pill", "background:#eef2ff;color:#2563eb;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-block;");
+    forceStyle(".date-range", "background:#ffffff;border:1px solid #eef0f4;border-radius:6px;padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;color:#374151;");
+    forceStyle(".refresh-btn", "background:#1a1f36;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;");
+
+    // Cards (outer)
+    forceStyle(".card", "background:#ffffff;border:1px solid #eef0f4;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,24,40,0.08);position:relative;display:block;");
+    forceStyle(".perf-card", "padding:0;overflow:hidden;");
+    forceStyle(".card-header", "display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px;");
+    forceStyle(".card-title", "font-size:13px;font-weight:600;color:#1a1f36;letter-spacing:-0.01em;");
+    forceStyle(".card-sub", "font-size:11px;color:#6b7280;margin-top:3px;");
+
+    // Grids
+    forceStyle(".grid-top", "display:grid;grid-template-columns:1.3fr 1.3fr 1fr 1fr;gap:14px;margin-bottom:14px;");
+    forceStyle(".grid-bottom", "display:grid;grid-template-columns:1.8fr 1fr;gap:14px;");
+    forceStyle(".right-stack", "display:flex;flex-direction:column;gap:14px;");
+
+    // Score card / gauge
+    forceStyle(".score-header-rows", "display:flex;flex-direction:column;gap:6px;margin-bottom:12px;");
+    forceStyle(".score-row", "display:grid;grid-template-columns:12px 1fr auto auto;align-items:center;gap:8px;font-size:12px;");
+    forceStyle(".score-row .lbl", "color:#374151;");
+    forceStyle(".score-row .val", "font-weight:600;color:#1a1f36;font-variant-numeric:tabular-nums;");
+    forceStyle(".gauge-wrap", "display:flex;flex-direction:column;align-items:center;margin-top:4px;position:relative;");
+    forceStyle(".gauge-value", "font-size:32px;font-weight:700;color:#2563eb;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin-top:-4px;");
+    forceStyle(".gauge-delta", "font-size:11px;font-weight:600;margin-top:2px;");
+
+    // Trend chart (bars)
+    forceStyle(".trend-chart", "display:flex;align-items:flex-end;gap:8px;height:150px;padding:8px 0 0;");
+    forceStyle(".trend-bar-col", "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;");
+    forceStyle(".trend-bar-val", "font-size:10px;font-weight:600;color:#374151;font-variant-numeric:tabular-nums;");
+    // Note: .trend-bar keeps its inline height from render; we only add the rest
+    var bars = document.querySelectorAll(".trend-bar");
+    for (var b = 0; b < bars.length; b++) {
+      var isCurrent = bars[b].classList.contains("current");
+      var color = isCurrent ? "#f97316" : "#f59e0b";
+      var existingHeight = bars[b].style.height || "4px";
+      bars[b].style.cssText = "height:" + existingHeight + ";width:100%;max-width:38px;border-radius:4px 4px 0 0;min-height:4px;background:" + color + ";" + (isCurrent ? "" : "opacity:0.85;");
     }
-    var insights = document.querySelectorAll(".insights-card");
-    for (var k = 0; k < insights.length; k++) {
-      insights[k].style.background = "linear-gradient(135deg, #eaf2ff 0%, #f4e8ff 100%)";
+    forceStyle(".trend-bar-lbl", "font-size:10px;color:#6b7280;margin-top:4px;");
+
+    // Mini cards (At-Risk Drivers, Camera Events)
+    forceStyle(".mini-inner", "display:flex;align-items:center;gap:12px;margin-top:6px;");
+    forceStyle(".mini-icon", "width:38px;height:38px;background:#eef2ff;color:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;");
+    forceStyle(".mini-number", "font-size:32px;font-weight:700;color:#2563eb;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;");
+    forceStyle(".mini-delta", "font-size:11px;font-weight:600;margin-top:4px;");
+
+    // Insights panel
+    forceStyle(".insights-card", "background:linear-gradient(135deg, #eaf2ff 0%, #f4e8ff 100%);border:1px solid #dfe8ff;");
+    forceStyle(".insights-header", "display:flex;justify-content:space-between;align-items:flex-start;");
+    forceStyle(".insights-header-left", "display:flex;gap:10px;align-items:center;");
+    forceStyle(".insights-icon", "width:30px;height:30px;border-radius:8px;background:#fff;color:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;");
+    forceStyle(".insights-label", "font-size:13px;font-weight:600;color:#1a1f36;");
+    forceStyle(".insights-sub", "font-size:11px;color:#6b7280;margin-top:1px;");
+    forceStyle(".insights-body", "margin-top:12px;font-size:13px;color:#1a1f36;line-height:1.55;");
+
+    // Performance table header & tabs
+    forceStyle(".perf-header", "display:flex;justify-content:space-between;align-items:flex-end;padding:18px 20px 0;border-bottom:1px solid #f1f3f7;");
+    forceStyle(".perf-tabs", "display:flex;gap:20px;padding:14px 20px 0;margin:0 -20px -1px;");
+    forceStyle(".perf-tab", "padding:8px 2px 10px;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;");
+    forceStyle(".perf-tab.active", "padding:8px 2px 10px;font-size:12px;font-weight:600;color:#2563eb;cursor:pointer;border-bottom:2px solid #2563eb;");
+    forceStyle(".perf-table-wrap", "overflow-x:auto;max-height:520px;overflow-y:auto;");
+    forceStyle("table.perf", "width:100%;border-collapse:collapse;font-size:12px;");
+
+    // Coaching/activity chart
+    forceStyle(".coaching-chart", "display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:8px;");
+    forceStyle(".coaching-col", "flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;");
+
+    // Hide classes
+    var hiddens = document.querySelectorAll(".hidden");
+    for (var h = 0; h < hiddens.length; h++) {
+      hiddens[h].style.display = "none";
+      hiddens[h].style.visibility = "hidden";
     }
+
+    // Responsive: collapse grid on narrow widths
     var gridTop = document.querySelector(".grid-top");
-    if (gridTop) gridTop.style.cssText = "display:grid;grid-template-columns:1.3fr 1.3fr 1fr 1fr;gap:14px;margin-bottom:14px;";
     var gridBottom = document.querySelector(".grid-bottom");
-    if (gridBottom) gridBottom.style.cssText = "display:grid;grid-template-columns:1.8fr 1fr;gap:14px;";
-    var stack = document.querySelector(".right-stack");
-    if (stack) stack.style.cssText = "display:flex;flex-direction:column;gap:14px;";
-    var topbar = document.querySelector(".topbar");
-    if (topbar) topbar.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px;";
-    // Responsive: collapse to single column below 1100px viewport
-    function applyResponsive() {
-      var w = window.innerWidth;
-      if (gridTop) gridTop.style.gridTemplateColumns = (w < 640 ? "1fr" : (w < 1100 ? "1fr 1fr" : "1.3fr 1.3fr 1fr 1fr"));
-      if (gridBottom) gridBottom.style.gridTemplateColumns = (w < 1100 ? "1fr" : "1.8fr 1fr");
-    }
-    applyResponsive();
-    window.addEventListener("resize", applyResponsive);
+    var w = window.innerWidth;
+    if (gridTop) gridTop.style.gridTemplateColumns = (w < 640 ? "1fr" : (w < 1100 ? "1fr 1fr" : "1.3fr 1.3fr 1fr 1fr"));
+    if (gridBottom) gridBottom.style.gridTemplateColumns = (w < 1100 ? "1fr" : "1.8fr 1fr");
+  }
+
+  // Attach responsive handler once
+  var _responsiveWired = false;
+  function wireResponsive() {
+    if (_responsiveWired) return;
+    _responsiveWired = true;
+    window.addEventListener("resize", applyInlineStyles);
   }
 
   function init() {
     $("verPill").innerText = "v" + VERSION;
     $("dateRangeLabel").innerText = formatDateRange();
     applyInlineStyles();
+    wireResponsive();
     wireUi();
 
     if (typeof geotab !== "undefined" && geotab.addin) {
