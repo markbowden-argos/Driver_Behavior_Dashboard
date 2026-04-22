@@ -54,13 +54,30 @@
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     font-size: 12px; color: var(--text-3);
   }
+  .date-range-wrap { position: relative; }
   .date-range {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 7px 12px;
     display: flex; align-items: center; gap: 8px; cursor: pointer;
     font-weight: 500; color: var(--text-2);
+    font-family: inherit; font-size: 12px;
   }
+  .date-range:hover { background: #f7f9fc; }
   .date-range svg { width: 14px; height: 14px; color: var(--text-3); }
+  .date-range-menu {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    background: #ffffff; border: 1px solid #eef0f4;
+    border-radius: 8px; box-shadow: 0 6px 24px rgba(16,24,40,0.12);
+    min-width: 180px; z-index: 500; padding: 4px;
+  }
+  .date-range-option {
+    padding: 8px 12px; font-size: 12px; color: #1a1f36;
+    border-radius: 6px; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .date-range-option:hover { background: #f7f9fc; }
+  .date-range-option.active { background: #eef2ff; color: #2563eb; font-weight: 600; }
+  .date-range-option .check { color: #2563eb; font-size: 14px; }
   .ver-pill {
     background: var(--blue-soft); color: var(--blue); border-radius: 999px;
     padding: 3px 10px; font-size: 11px; font-weight: 600;
@@ -401,9 +418,13 @@
     <div class="meta-row">
       <span class="ver-pill" id="verPill">v1.0.5</span>
       <span id="refreshedAt"></span>
-      <div class="date-range">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span id="dateRangeLabel">Last 30 days</span>
+      <div class="date-range-wrap" id="dateRangeWrap">
+        <button class="date-range" id="dateRangeBtn" title="Change date range">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="dateRangeLabel">Past 30 days</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="date-range-menu hidden" id="dateRangeMenu" style="display:none;"></div>
       </div>
       <button class="settings-btn" id="settingsBtn" title="Configure rule mapping">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -453,7 +474,7 @@
         <div class="card-header">
           <div>
             <div class="card-title">Fleet Safety Score</div>
-            <div class="card-sub">Last 30 days vs. prior periods</div>
+            <div class="card-sub" id="scoreSub">Past 30 days vs. prior period</div>
           </div>
           <div class="card-action" title="About this score">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -522,7 +543,7 @@
         <div class="card-header">
           <div>
             <div class="card-title">Camera Events</div>
-            <div class="card-sub">Dashcam captures, 30 days</div>
+            <div class="card-sub" id="cameraSub">Dashcam captures, past 30 days</div>
           </div>
           <div class="card-action">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -547,7 +568,7 @@
         <div class="perf-header">
           <div class="left">
             <div class="card-title">Driver Performance</div>
-            <div class="card-sub">30-day scores and behavior breakdown</div>
+            <div class="card-sub" id="perfSub">Past 30 days scores and behavior breakdown</div>
           </div>
           <div class="perf-tabs">
             <div class="perf-tab active" data-filter="all">Drivers <span class="count" id="tabCountAll">(0)</span></div>
@@ -627,7 +648,7 @@
 (function() {
   "use strict";
 
-  var VERSION = "1.0.10";
+  var VERSION = "1.0.11";
 
   // Exception rule mapping - adjust these to match your database
   var TRACKED_RULES = [
@@ -649,6 +670,15 @@
   var currentSort = { key: "score", dir: "desc" };
   var allRulesCache = [];             // populated by loadAll, reused by settings modal
   var SETTINGS_STORAGE_KEY = "driverDashboard_v1_ruleMapping";
+  var DATE_RANGE_STORAGE_KEY = "driverDashboard_v1_dateRange";
+  var currentDateRange = "30d";       // 7d | 30d | mtd | ytd
+
+  var DATE_RANGE_OPTIONS = [
+    { key: "7d",  label: "Past 7 days",   short: "7 days"        },
+    { key: "30d", label: "Past 30 days",  short: "30 days"       },
+    { key: "mtd", label: "Month to date", short: "Month to date" },
+    { key: "ytd", label: "Year to date",  short: "YTD"           }
+  ];
 
   // ========== DOM helpers ==========
   function $(id) { return document.getElementById(id); }
@@ -688,9 +718,69 @@
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return months[d.getMonth()] + " " + String(d.getFullYear()).slice(2);
   }
+  function getDateRangeOption(key) {
+    for (var i = 0; i < DATE_RANGE_OPTIONS.length; i++) {
+      if (DATE_RANGE_OPTIONS[i].key === key) return DATE_RANGE_OPTIONS[i];
+    }
+    return DATE_RANGE_OPTIONS[1]; // default 30d
+  }
+
+  function loadStoredDateRange() {
+    try {
+      var v = localStorage.getItem(DATE_RANGE_STORAGE_KEY);
+      if (v && getDateRangeOption(v).key === v) return v;
+    } catch (e) {}
+    return "30d";
+  }
+
+  function saveStoredDateRange(key) {
+    try { localStorage.setItem(DATE_RANGE_STORAGE_KEY, key); } catch (e) {}
+  }
+
+  // Returns dates (as ISO strings) for the currently-selected range, its matching
+  // previous period (for delta comparisons), and a fixed YTD start.
+  function computeRange(rangeKey) {
+    var now = new Date();
+    var endISO = now.toISOString();
+    var start, prevStart, prevEnd;
+
+    if (rangeKey === "7d") {
+      start = new Date(now.getTime() - 7 * MS_PER_DAY);
+      prevEnd = start;
+      prevStart = new Date(start.getTime() - 7 * MS_PER_DAY);
+    } else if (rangeKey === "mtd") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      // Previous: same # of days ago but in previous calendar month
+      var daysInto = Math.max(1, Math.floor((now - start) / MS_PER_DAY));
+      var prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+      prevStart = prevMonthStart;
+      prevEnd = new Date(prevMonthStart.getTime() + daysInto * MS_PER_DAY);
+    } else if (rangeKey === "ytd") {
+      start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+      var daysThisYear = Math.max(1, Math.floor((now - start) / MS_PER_DAY));
+      prevStart = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
+      prevEnd = new Date(prevStart.getTime() + daysThisYear * MS_PER_DAY);
+    } else { // 30d default
+      start = new Date(now.getTime() - 30 * MS_PER_DAY);
+      prevEnd = start;
+      prevStart = new Date(start.getTime() - 30 * MS_PER_DAY);
+    }
+
+    return {
+      key: rangeKey,
+      startISO: start.toISOString(),
+      endISO: endISO,
+      prevStartISO: prevStart.toISOString(),
+      prevEndISO: prevEnd.toISOString(),
+      ytdStartISO: new Date(now.getFullYear(), 0, 1).toISOString(),
+      days180ISO: new Date(now.getTime() - 180 * MS_PER_DAY).toISOString()
+    };
+  }
+
   function formatDateRange() {
-    var end = new Date();
-    var start = new Date(end.getTime() - 30 * MS_PER_DAY);
+    var r = computeRange(currentDateRange);
+    var start = new Date(r.startISO);
+    var end = new Date(r.endISO);
     return formatMonthShort(start) + " - " + formatMonthShort(end) + ", " + end.getFullYear();
   }
 
@@ -811,6 +901,8 @@
       }
       return { users: users, rules: rules };
     }).then(function(ctx) {
+      // Strip zone-based rules before anything else uses them
+      ctx.rules = filterToBehaviorRules(ctx.rules);
       // Cache rules globally so the Settings modal can reuse them
       allRulesCache = ctx.rules.slice();
 
@@ -1375,13 +1467,31 @@
   function listRules() {
     if (!apiRef) { console.error("API not initialized"); return; }
     apiRef.call("Get", { typeName: "Rule", search: {}, resultsLimit: 5000 }, function(rules) {
-      rules.sort(function(a, b) { return (a.name || "").localeCompare(b.name || ""); });
-      console.table(rules.map(function(r) { return { id: r.id, name: r.name }; }));
-      console.log("Found " + rules.length + " rules. Copy the names and update TRACKED_RULES.");
+      var total = rules.length;
+      var behavior = filterToBehaviorRules(rules);
+      behavior.sort(function(a, b) { return (a.name || "").localeCompare(b.name || ""); });
+      console.table(behavior.map(function(r) { return { id: r.id, name: r.name, baseType: r.baseType }; }));
+      console.log("Found " + behavior.length + " behavior rules (filtered out " + (total - behavior.length) + " zone-based rules).");
     }, function(e) { console.error("listRules error:", e); });
   }
 
   // ========== Settings: rule-to-category mapping ==========
+  // Strip out zone-based rules — they can number in the thousands on big fleets
+  // and are never the source of driver behavior exception events.
+  function filterToBehaviorRules(rules) {
+    if (!rules || !rules.length) return [];
+    var out = [];
+    for (var i = 0; i < rules.length; i++) {
+      var r = rules[i];
+      var bt = r.baseType;
+      // baseType can be a plain string or occasionally an object wrapper
+      var btStr = typeof bt === "string" ? bt : (bt && (bt.id || bt.name)) || "";
+      if (btStr === "Zone") continue;
+      out.push(r);
+    }
+    return out;
+  }
+
   function autoMatchRules(rules) {
     // Returns { ruleId: categoryKey } based on built-in TRACKED_RULES name matching.
     var map = {};
@@ -1434,7 +1544,7 @@
     } else {
       apiMulti([["Get", { typeName: "Rule", search: {}, resultsLimit: 5000 }]])
         .then(function(r) {
-          allRulesCache = r[0] || [];
+          allRulesCache = filterToBehaviorRules(r[0] || []);
           populateSettings(allRulesCache);
         })
         .catch(function(e) {
