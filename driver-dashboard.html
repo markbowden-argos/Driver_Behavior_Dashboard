@@ -71,6 +71,71 @@
   }
   .refresh-btn:hover { background: #000; }
   .refresh-btn:disabled { opacity: 0.6; cursor: wait; }
+  .settings-btn {
+    background: #ffffff; color: #374151; border: 1px solid #eef0f4;
+    border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .settings-btn:hover { background: #f7f9fc; }
+
+  /* Settings modal */
+  .settings-modal { position: fixed; inset: 0; z-index: 1000; }
+  .settings-backdrop {
+    position: absolute; inset: 0; background: rgba(16,24,40,0.55);
+  }
+  .settings-panel {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(92vw, 640px); max-height: 85vh; background: #ffffff;
+    border-radius: 14px; display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden;
+  }
+  .settings-header {
+    padding: 20px 24px; border-bottom: 1px solid #f1f3f7;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  }
+  .settings-title { font-size: 16px; font-weight: 700; color: #1a1f36; }
+  .settings-sub { font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
+  .settings-close {
+    background: transparent; border: 0; color: #6b7280;
+    font-size: 24px; line-height: 1; cursor: pointer; padding: 0 4px;
+  }
+  .settings-close:hover { color: #1a1f36; }
+  .settings-body {
+    flex: 1; overflow-y: auto; padding: 8px 24px 20px;
+  }
+  .settings-empty { padding: 32px; color: #6b7280; text-align: center; font-size: 13px; }
+  .rule-row {
+    display: grid; grid-template-columns: 1fr 200px;
+    gap: 14px; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #f1f3f7;
+  }
+  .rule-row:last-child { border-bottom: 0; }
+  .rule-name { font-size: 13px; color: #1a1f36; font-weight: 500; }
+  .rule-auto-badge {
+    display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600;
+    color: #10b981; background: #ecfdf5; border-radius: 999px; padding: 2px 8px;
+  }
+  .rule-select {
+    padding: 7px 10px; border: 1px solid #eef0f4; border-radius: 6px;
+    font-size: 12px; color: #1a1f36; background: #ffffff; width: 100%;
+    font-family: inherit; cursor: pointer;
+  }
+  .rule-select:focus { outline: none; border-color: #2563eb; }
+  .settings-footer {
+    padding: 16px 24px; border-top: 1px solid #f1f3f7;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .settings-footer-right { display: flex; gap: 8px; }
+  .settings-reset, .settings-cancel {
+    background: #ffffff; color: #374151; border: 1px solid #eef0f4;
+    border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .settings-reset:hover, .settings-cancel:hover { background: #f7f9fc; }
+  .settings-save {
+    background: #2563eb; color: #ffffff; border: 0;
+    border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .settings-save:hover { background: #1d4ed8; }
 
   /* Cards */
   .card {
@@ -340,12 +405,40 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span id="dateRangeLabel">Last 30 days</span>
       </div>
+      <button class="settings-btn" id="settingsBtn" title="Configure rule mapping">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
       <button class="refresh-btn" id="refreshBtn">Refresh</button>
     </div>
   </div>
 
   <div id="notice" class="notice-card hidden" style="display:none;"></div>
   <div id="error" class="error-card hidden" style="display:none;"></div>
+
+  <!-- Settings modal: rule-to-category mapping -->
+  <div id="settingsModal" class="settings-modal hidden" style="display:none;">
+    <div class="settings-backdrop" id="settingsBackdrop"></div>
+    <div class="settings-panel">
+      <div class="settings-header">
+        <div>
+          <div class="settings-title">Rule Category Mapping</div>
+          <div class="settings-sub">Assign each rule from your MyGeotab database to a behavior category. Rules set to <b>Ignore</b> will not count toward driver scores.</div>
+        </div>
+        <button class="settings-close" id="settingsCloseBtn" title="Close">&times;</button>
+      </div>
+      <div class="settings-body" id="settingsBody">
+        <div class="settings-empty">Loading rules...</div>
+      </div>
+      <div class="settings-footer">
+        <button class="settings-reset" id="settingsResetBtn">Reset to auto-match</button>
+        <div class="settings-footer-right">
+          <button class="settings-cancel" id="settingsCancelBtn">Cancel</button>
+          <button class="settings-save" id="settingsSaveBtn">Save &amp; Reload</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="loader" class="loader-wrap">
     <div class="spinner"></div>
@@ -534,7 +627,7 @@
 (function() {
   "use strict";
 
-  var VERSION = "1.0.9";
+  var VERSION = "1.0.10";
 
   // Exception rule mapping - adjust these to match your database
   var TRACKED_RULES = [
@@ -554,6 +647,8 @@
   var monthlyTrend = [];
   var currentFilter = "all";
   var currentSort = { key: "score", dir: "desc" };
+  var allRulesCache = [];             // populated by loadAll, reused by settings modal
+  var SETTINGS_STORAGE_KEY = "driverDashboard_v1_ruleMapping";
 
   // ========== DOM helpers ==========
   function $(id) { return document.getElementById(id); }
@@ -716,24 +811,27 @@
       }
       return { users: users, rules: rules };
     }).then(function(ctx) {
-      var ruleIdToKey = {};
-      var matched = 0;
-      for (var i = 0; i < TRACKED_RULES.length; i++) {
-        var tr = TRACKED_RULES[i];
-        for (var j = 0; j < ctx.rules.length; j++) {
-          var rn = (ctx.rules[j].name || "").toLowerCase();
-          for (var k = 0; k < tr.names.length; k++) {
-            if (rn === tr.names[k].toLowerCase() || rn.indexOf(tr.names[k].toLowerCase()) !== -1) {
-              ruleIdToKey[ctx.rules[j].id] = tr.key;
-              matched++;
-              break;
-            }
-          }
-          if (ruleIdToKey[ctx.rules[j].id] === tr.key) break;
-        }
+      // Cache rules globally so the Settings modal can reuse them
+      allRulesCache = ctx.rules.slice();
+
+      // Prefer user-configured mapping from localStorage; fall back to name-based auto-match
+      var saved = loadRuleMapping();
+      var ruleIdToKey;
+      var source;
+      if (saved && typeof saved === "object") {
+        ruleIdToKey = saved;
+        source = "custom";
+      } else {
+        ruleIdToKey = autoMatchRules(ctx.rules);
+        source = "auto";
       }
-      if (matched < TRACKED_RULES.length) {
-        showNotice("Matched " + matched + " of " + TRACKED_RULES.length + " tracked rules. Open the browser console and type listRules() to see all rule names in your database, then update TRACKED_RULES in driver-dashboard.html to match.");
+      var uniqueKeys = {};
+      for (var rid in ruleIdToKey) uniqueKeys[ruleIdToKey[rid]] = true;
+      var matchedCats = Object.keys(uniqueKeys).length;
+
+      if (source === "auto" && matchedCats < TRACKED_RULES.length) {
+        showNotice("Matched " + matchedCats + " of " + TRACKED_RULES.length +
+          " categories automatically. Click \u2699 Settings in the top-right to map the remaining rules from your database.");
       }
 
       $("loaderMsg").innerText = "Loading events and trips...";
@@ -1253,6 +1351,18 @@
       });
     }
     $("refreshBtn").addEventListener("click", function() { run(); });
+
+    // Settings modal
+    $("settingsBtn").addEventListener("click", openSettings);
+    $("settingsCloseBtn").addEventListener("click", closeSettings);
+    $("settingsCancelBtn").addEventListener("click", closeSettings);
+    $("settingsBackdrop").addEventListener("click", closeSettings);
+    $("settingsSaveBtn").addEventListener("click", saveSettings);
+    $("settingsResetBtn").addEventListener("click", resetSettings);
+    // Close on Escape
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeSettings();
+    });
   }
 
   function showError(err) {
@@ -1269,6 +1379,120 @@
       console.table(rules.map(function(r) { return { id: r.id, name: r.name }; }));
       console.log("Found " + rules.length + " rules. Copy the names and update TRACKED_RULES.");
     }, function(e) { console.error("listRules error:", e); });
+  }
+
+  // ========== Settings: rule-to-category mapping ==========
+  function autoMatchRules(rules) {
+    // Returns { ruleId: categoryKey } based on built-in TRACKED_RULES name matching.
+    var map = {};
+    for (var i = 0; i < TRACKED_RULES.length; i++) {
+      var tr = TRACKED_RULES[i];
+      for (var j = 0; j < rules.length; j++) {
+        if (map[rules[j].id]) continue;
+        var rn = (rules[j].name || "").toLowerCase();
+        for (var k = 0; k < tr.names.length; k++) {
+          var needle = tr.names[k].toLowerCase();
+          if (rn === needle || rn.indexOf(needle) !== -1) {
+            map[rules[j].id] = tr.key;
+            break;
+          }
+        }
+      }
+    }
+    return map;
+  }
+
+  function loadRuleMapping() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === "object") ? parsed : null;
+    } catch (e) { return null; }
+  }
+
+  function saveRuleMappingToStorage(mapping) {
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(mapping));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function clearRuleMapping() {
+    try { localStorage.removeItem(SETTINGS_STORAGE_KEY); } catch (e) {}
+  }
+
+  function openSettings() {
+    show("settingsModal");
+    applyInlineStyles();
+    var body = $("settingsBody");
+    body.innerHTML = '<div class="settings-empty" style="padding:32px;color:#6b7280;text-align:center;font-size:13px;">Loading rules...</div>';
+
+    // Use cached rules if available, otherwise fetch now
+    if (allRulesCache && allRulesCache.length) {
+      populateSettings(allRulesCache);
+    } else {
+      apiMulti([["Get", { typeName: "Rule", search: {}, resultsLimit: 5000 }]])
+        .then(function(r) {
+          allRulesCache = r[0] || [];
+          populateSettings(allRulesCache);
+        })
+        .catch(function(e) {
+          body.innerHTML = '<div class="settings-empty" style="padding:32px;color:#ef4444;text-align:center;font-size:13px;">Error loading rules: ' + esc(e.message || e) + '</div>';
+        });
+    }
+  }
+
+  function populateSettings(rules) {
+    var saved = loadRuleMapping() || {};
+    var auto = autoMatchRules(rules);
+    var sorted = rules.slice().sort(function(a, b) { return (a.name || "").localeCompare(b.name || ""); });
+
+    var html = "";
+    for (var i = 0; i < sorted.length; i++) {
+      var rule = sorted[i];
+      var currentKey = saved[rule.id] || auto[rule.id] || "";
+      var isAuto = !saved[rule.id] && auto[rule.id];
+      html += '<div class="rule-row" data-rule-id="' + esc(rule.id) + '" style="display:grid;grid-template-columns:1fr 200px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f3f7;">' +
+        '<div class="rule-name" style="font-size:13px;color:#1a1f36;font-weight:500;">' + esc(rule.name || "(unnamed)");
+      if (isAuto) {
+        html += '<span class="rule-auto-badge" style="display:inline-block;margin-left:8px;font-size:10px;font-weight:600;color:#10b981;background:#ecfdf5;border-radius:999px;padding:2px 8px;">auto</span>';
+      }
+      html += '</div>' +
+        '<select class="rule-select" style="padding:7px 10px;border:1px solid #eef0f4;border-radius:6px;font-size:12px;color:#1a1f36;background:#ffffff;width:100%;font-family:inherit;cursor:pointer;">' +
+          '<option value="">Ignore</option>';
+      for (var j = 0; j < TRACKED_RULES.length; j++) {
+        var sel = currentKey === TRACKED_RULES[j].key ? " selected" : "";
+        html += '<option value="' + esc(TRACKED_RULES[j].key) + '"' + sel + '>' + esc(TRACKED_RULES[j].label) + '</option>';
+      }
+      html += '</select></div>';
+    }
+    if (!html) {
+      html = '<div class="settings-empty" style="padding:32px;color:#6b7280;text-align:center;font-size:13px;">No rules found in this database.</div>';
+    }
+    $("settingsBody").innerHTML = html;
+  }
+
+  function saveSettings() {
+    var rows = document.querySelectorAll("#settingsBody .rule-row");
+    var mapping = {};
+    for (var i = 0; i < rows.length; i++) {
+      var id = rows[i].getAttribute("data-rule-id");
+      var sel = rows[i].querySelector(".rule-select");
+      if (sel && sel.value) mapping[id] = sel.value;
+    }
+    saveRuleMappingToStorage(mapping);
+    closeSettings();
+    run();
+  }
+
+  function resetSettings() {
+    clearRuleMapping();
+    if (allRulesCache && allRulesCache.length) populateSettings(allRulesCache);
+  }
+
+  function closeSettings() {
+    hide("settingsModal");
   }
 
   // ========== Main ==========
@@ -1320,6 +1544,22 @@
     forceStyle(".ver-pill", "background:#eef2ff;color:#2563eb;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-block;");
     forceStyle(".date-range", "background:#ffffff;border:1px solid #eef0f4;border-radius:6px;padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;color:#374151;");
     forceStyle(".refresh-btn", "background:#1a1f36;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;");
+    forceStyle(".settings-btn", "background:#ffffff;color:#374151;border:1px solid #eef0f4;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;");
+
+    // Settings modal container & chrome
+    forceStyle(".settings-modal", "position:fixed;inset:0;z-index:1000;");
+    forceStyle(".settings-backdrop", "position:absolute;inset:0;background:rgba(16,24,40,0.55);");
+    forceStyle(".settings-panel", "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(92vw,640px);max-height:85vh;background:#ffffff;border-radius:14px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;");
+    forceStyle(".settings-header", "padding:20px 24px;border-bottom:1px solid #f1f3f7;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;");
+    forceStyle(".settings-title", "font-size:16px;font-weight:700;color:#1a1f36;");
+    forceStyle(".settings-sub", "font-size:12px;color:#6b7280;margin-top:4px;line-height:1.5;");
+    forceStyle(".settings-close", "background:transparent;border:0;color:#6b7280;font-size:24px;line-height:1;cursor:pointer;padding:0 4px;");
+    forceStyle(".settings-body", "flex:1;overflow-y:auto;padding:8px 24px 20px;");
+    forceStyle(".settings-footer", "padding:16px 24px;border-top:1px solid #f1f3f7;display:flex;justify-content:space-between;align-items:center;gap:10px;");
+    forceStyle(".settings-footer-right", "display:flex;gap:8px;");
+    forceStyle(".settings-reset", "background:#ffffff;color:#374151;border:1px solid #eef0f4;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;");
+    forceStyle(".settings-cancel", "background:#ffffff;color:#374151;border:1px solid #eef0f4;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;");
+    forceStyle(".settings-save", "background:#2563eb;color:#ffffff;border:0;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;");
 
     // Cards (outer)
     forceStyle(".card", "background:#ffffff;border:1px solid #eef0f4;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,24,40,0.08);position:relative;display:block;");
