@@ -1,11 +1,11 @@
 {
   "name": "Driver Behavior Dashboard",
   "supportEmail": "mark.bowden@argosconnected.com",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "items": [
     {
-      "version": "1.0.5",
-      "url": "https://markbowden-argos.github.io/Driver_Behavior_Dashboard/driver-dashboard.html?v=5",
+      "version": "1.0.6",
+      "url": "https://markbowden-argos.github.io/Driver_Behavior_Dashboard/driver-dashboard.html?v=6",
       "path": "ActivityLink/",
       "menuName": {
         "en": "Driver Behavior Dashboard"
