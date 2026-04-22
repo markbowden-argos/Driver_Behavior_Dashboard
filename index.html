@@ -5,194 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Driver Behavior Dashboard</title>
   <style>
-    /* I am keeping ALL your original CSS here 
-       to ensure the design remains exactly how you liked it.
-    */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 13px; color: #333; background: #f7f8fa; padding: 16px; }
-    #loading { text-align: center; padding: 40px; color: #888; font-size: 14px; }
-    #error-msg { display: none; background: #fff0f0; border: 1px solid #f5c6c6; border-radius: 6px; padding: 12px 16px; color: #a00; margin-bottom: 16px; }
-    #fleet-summary { display: none; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    .metric-card { background: #fff; border: 1px solid #e4e6ea; border-radius: 6px; padding: 10px 14px; min-width: 130px; flex: 1; }
-    .metric-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
-    .metric-value { font-size: 20px; font-weight: 600; color: #222; }
-    .metric-delta { font-size: 11px; margin-top: 2px; }
-    .delta-pos { color: #1a8a5a; }
-    .delta-neg { color: #cc2200; }
-    #filter-row { display: none; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
-    .filter-label { font-size: 12px; color: #666; }
-    .filter-btn { font-size: 12px; padding: 4px 12px; border: 1px solid #d0d3d9; border-radius: 99px; cursor: pointer; background: #fff; color: #555; }
-    .filter-btn.active { background: #1a6eb5; color: #fff; border-color: #1a6eb5; }
-    #table-wrap { display: none; background: #fff; border: 1px solid #e4e6ea; border-radius: 6px; overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    thead th { background: #f5f6f8; padding: 8px 10px; text-align: left; border-bottom: 1px solid #e4e6ea; font-weight: 600; color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
-    tbody td { padding: 8px 10px; border-bottom: 1px solid #f0f1f3; vertical-align: middle; }
-    .score-pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-weight: 600; font-size: 12px; }
-    .grade-a { background: #e6f4ec; color: #1a7a3a; }
-    .grade-b { background: #e6f0fb; color: #1a5ca0; }
-    .grade-c { background: #fef6e0; color: #8a6000; }
-    .grade-d { background: #fdecea; color: #a02000; }
-    .pos { color: #1a8a5a; }
-    .neg { color: #cc2200; }
-    .warn { color: #cc7700; }
-    .refresh-btn { font-size: 12px; padding: 5px 14px; border: 1px solid #d0d3d9; border-radius: 4px; cursor: pointer; background: #fff; color: #444; margin-left: auto; display: block; margin-bottom: 12px; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f8fa;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e4e6ea;
+      border-radius: 8px;
+      padding: 40px 48px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: #1a6eb5;
+      border-radius: 12px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo svg {
+      width: 30px;
+      height: 30px;
+      fill: #fff;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e4e6ea;
+      margin: 24px 0;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .url {
+      font-family: monospace;
+      font-size: 12px;
+      background: #f5f6f8;
+      border: 1px solid #e4e6ea;
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: #444;
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
+  <div class="card">
 
-  <div id="loading">Loading driver data&hellip;</div>
-  <div id="error-msg"></div>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+      </svg>
+    </div>
 
-  <div id="fleet-summary"></div>
+    <h1>Driver Behavior Dashboard</h1>
+    <p>This is a MyGeotab Add-In hosted on GitHub Pages.</p>
+    <p>The dashboard is accessed through your MyGeotab account, not directly through this page.</p>
 
-  <div id="filter-row">
-    <span class="filter-label">Show:</span>
-    <button class="filter-btn active" onclick="applyFilter('all', this)">All drivers</button>
-    <button class="filter-btn" onclick="applyFilter('risk', this)">At-risk (D)</button>
-    <button class="filter-btn" onclick="applyFilter('cam', this)">Camera events</button>
-    <button class="filter-btn" onclick="applyFilter('top', this)">Top performers</button>
-    <button class="refresh-btn" onclick="reload()">Refresh</button>
+    <hr class="divider">
+
+    <div class="label">Add-In URL</div>
+    <div class="url">https://markbowden-argos.github.io/Driver_Behavior_Dashboard/dashboard.html</div>
+
   </div>
-
-  <div id="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Driver</th>
-          <th>Score</th>
-          <th>Grade</th>
-          <th>vs Prev Mo</th>
-          <th>YTD</th>
-          <th>vs YTD</th>
-          <th>Miles</th>
-          <th>Speeding</th>
-          <th>Braking</th>
-          <th>Accel</th>
-          <th>Distraction</th>
-          <th>Phone</th>
-          <th>Camera</th>
-        </tr>
-      </thead>
-      <tbody id="driver-tbody"></tbody>
-    </table>
-  </div>
-
-  <script src="dashboard.js"></script>
-
-  <script>
-    /**
-     * GEOTAB INTEGRATION - Rebuilding the bridge while keeping your design
-     */
-    (function() {
-      var ALL_ROWS = [];
-      var API_REF = null;
-
-      // Register the add-in with Geotab
-      window.geotab = window.geotab || {};
-      window.geotab.addin = window.geotab.addin || {};
-
-      geotab.addin.DriverBehaviorDashboard = function(elt, service) {
-        return {
-          initialize: function(api, state, callback) {
-            API_REF = api;
-            loadData(callback);
-          },
-          focus: function(api, state) {},
-          blur: function(api, state) {}
-        };
-      };
-
-      function loadData(callback) {
-        // Show loading state using your existing IDs
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("fleet-summary").style.display = "none";
-        document.getElementById("filter-row").style.display = "none";
-        document.getElementById("table-wrap").style.display = "none";
-
-        // Call the logic in dashboard.js
-        runDashboard(API_REF, function(rows, fleet) {
-          ALL_ROWS = rows;
-          renderFleet(fleet);
-          renderTable(rows);
-          
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("fleet-summary").style.display = "flex";
-          document.getElementById("filter-row").style.display = "flex";
-          document.getElementById("table-wrap").style.display = "block";
-          
-          if (callback) callback();
-        }, function(err) {
-          var el = document.getElementById("error-msg");
-          el.style.display = "block";
-          el.textContent = "Error: " + err;
-          document.getElementById("loading").style.display = "none";
-          if (callback) callback();
-        });
-      }
-
-      /**
-       * RENDERING - Using your original card design
-       */
-      function renderFleet(f) {
-        var container = document.getElementById("fleet-summary");
-        var prevSign = parseFloat(f.changePrev) >= 0 ? "pos" : "neg";
-        var ytdSign = parseFloat(f.changeYtd) >= 0 ? "pos" : "neg";
-
-        container.innerHTML = 
-          metricCard("Fleet score (30d)", f.score30, f.changePrev + " vs prev mo", prevSign) +
-          metricCard("YTD average", f.scoreYtd, f.changeYtd + " vs YTD", ytdSign) +
-          metricCard("Incidents (30d)", f.incidents30, "Active Drivers: " + f.driverCount, "");
-      }
-
-      function metricCard(label, value, delta, deltaClass) {
-        return '<div class="metric-card">' +
-          '<div class="metric-label">' + label + '</div>' +
-          '<div class="metric-value">' + value + '</div>' +
-          '<div class="metric-delta ' + deltaClass + '">' + delta + '</div>' +
-          '</div>';
-      }
-
-      /**
-       * TABLE RENDERING - Using your original table structure
-       */
-      function renderTable(rows) {
-        var tbody = "";
-        rows.forEach(function(r) {
-          var gradeClass = "grade-" + (r.Grade || 'A').toLowerCase();
-          var prevClass = (r.vsPrevMo && r.vsPrevMo.charAt(0) === "+") ? "pos" : "neg";
-
-          tbody += "<tr>" +
-            "<td>" + r.Name + "</td>" +
-            "<td><span class='score-pill " + gradeClass + "'>" + r.Score + "</span></td>" +
-            "<td><span class='score-pill " + gradeClass + "'>" + r.Grade + "</span></td>" +
-            "<td class='" + prevClass + "'>" + (r.vsPrevMo || "0%") + "</td>" +
-            "<td>" + (r.YTD || "0") + "</td>" +
-            "<td>" + (r.vsYTD || "0%") + "</td>" +
-            "<td>" + (r.Miles || "0") + "</td>" +
-            "<td>" + r.Speeding + "</td>" +
-            "<td>" + r.Braking + "</td>" +
-            "<td>" + r.Accel + "</td>" +
-            "<td>" + (r.Distraction || 0) + "</td>" +
-            "<td>" + (r.Phone || 0) + "</td>" +
-            "<td>" + (r.Camera || 0) + "</td>" +
-            "</tr>";
-        });
-        document.getElementById("driver-tbody").innerHTML = tbody;
-      }
-
-      // Buttons
-      window.applyFilter = function(type, btn) {
-        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        var filtered = ALL_ROWS;
-        if (type === "risk") filtered = ALL_ROWS.filter(r => r.Grade === "D");
-        if (type === "top")  filtered = ALL_ROWS.filter(r => r.Score >= 85);
-        renderTable(filtered);
-      };
-
-      window.reload = function() { loadData(null); };
-
-    })();
-  </script>
 </body>
 </html>
