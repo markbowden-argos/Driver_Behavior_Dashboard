@@ -1,23 +1,16 @@
 {
   "name": "Driver Behavior Dashboard",
-  "supportEmail": "admin@yourcompany.com",
+  "supportEmail": "info@argosconnected.com",
   "version": "1.0.0",
   "isSigned": false,
   "items": [
     {
-      "path": "DriveAppLink/",
+      "path": "customPage",
       "menuName": {
         "en": "Driver Behavior Dashboard"
       },
       "menuId": "DriverBehaviorDashboard",
       "url": "https://markbowden-argos.github.io/Driver_Behavior_Dashboard/dashboard.html"
-    }
-  ],
-  "pages": [
-    {
-      "title": "Driver Behavior Dashboard",
-      "url": "https://markbowden-argos.github.io/Driver_Behavior_Dashboard/dashboard.html",
-      "noMenu": false
     }
   ],
   "files": {}
