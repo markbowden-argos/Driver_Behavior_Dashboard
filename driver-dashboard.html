@@ -256,7 +256,7 @@
 (function() {
   "use strict";
 
-  var VERSION = "1.0.3";
+  var VERSION = "1.0.4";
 
   // ========== CONFIG ==========
   // Update these to match your actual MyGeotab exception rule names.
@@ -362,16 +362,18 @@
 
   function apiMulti(calls) {
     return new Promise(function(resolve, reject) {
-      apiRef.multiCall(calls, function(results) {
-        resolve(results);
-      }, function(err) {
-        reject(err);
-      });
+      if (!apiRef) { reject(new Error("MyGeotab API not available (apiRef is null). Try clicking Refresh or re-opening the add-in.")); return; }
+      try {
+        apiRef.multiCall(calls, function(results) { resolve(results); }, function(err) { reject(err); });
+      } catch (e) { reject(e); }
     });
   }
   function apiSingle(method, params) {
     return new Promise(function(resolve, reject) {
-      apiRef.call(method, params, function(res) { resolve(res); }, function(err) { reject(err); });
+      if (!apiRef) { reject(new Error("MyGeotab API not available.")); return; }
+      try {
+        apiRef.call(method, params, function(res) { resolve(res); }, function(err) { reject(err); });
+      } catch (e) { reject(e); }
     });
   }
 
@@ -798,20 +800,40 @@
     wireFilters();
 
     if (typeof geotab !== "undefined" && geotab.addin) {
+      console.log("[Dashboard] geotab.addin detected - registering DriverBehaviorDashboard v" + VERSION);
       // Running inside MyGeotab - register the Add-In
+      var initialLoadDone = false;
+      function tryRun() {
+        if (!apiRef) {
+          console.warn("[Dashboard] tryRun called but apiRef is null - skipping");
+          return;
+        }
+        if (initialLoadDone) {
+          console.log("[Dashboard] tryRun called but initial load already done - skipping duplicate");
+          return;
+        }
+        initialLoadDone = true;
+        run();
+      }
       geotab.addin.DriverBehaviorDashboard = function() {
+        console.log("[Dashboard] factory function called");
         return {
           initialize: function(api, state, callback) {
-            apiRef = api;
+            console.log("[Dashboard] initialize called, api present:", !!api);
+            if (api) apiRef = api;
             // expose for console diagnostics
             try { Object.defineProperty(window, "listRules", { value: listRules, configurable: true }); } catch (e) {}
-            callback();
+            if (typeof callback === "function") callback();
+            tryRun();
           },
           focus: function(api, state) {
-            apiRef = api;
-            run();
+            console.log("[Dashboard] focus called, api present:", !!api);
+            if (api) apiRef = api;
+            tryRun();
           },
-          blur: function() {}
+          blur: function() {
+            console.log("[Dashboard] blur called");
+          }
         };
       };
     } else {
