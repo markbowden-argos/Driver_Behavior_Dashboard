@@ -4,220 +4,130 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Driver Behavior Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      color: #333;
-      background: #f7f8fa;
-      padding: 16px;
-    }
-
-    #loading {
-      text-align: center;
-      padding: 40px;
-      color: #888;
-      font-size: 14px;
-    }
-
-    #error-msg {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #f5c6c6;
-      border-radius: 6px;
-      padding: 12px 16px;
-      color: #a00;
-      margin-bottom: 16px;
-    }
-
-    /* Fleet summary strip */
-    #fleet-summary {
-      display: none;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .metric-card {
-      background: #fff;
-      border: 1px solid #e4e6ea;
-      border-radius: 6px;
-      padding: 10px 14px;
-      min-width: 130px;
-      flex: 1;
-    }
-
-    .metric-label {
-      font-size: 11px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 3px;
-    }
-
-    .metric-value {
-      font-size: 20px;
-      font-weight: 600;
-      color: #222;
-    }
-
-    .metric-delta {
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
+    body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; background: #f4f5f7; color: #222; padding: 20px 24px 40px; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .header-title { font-size: 18px; font-weight: 600; color: #1a1a2e; }
+    .header-sub { font-size: 12px; color: #888; margin-top: 3px; }
+    .refresh-btn { font-size: 12px; padding: 6px 14px; border: 1px solid #d0d3d9; border-radius: 6px; cursor: pointer; background: #fff; color: #555; font-family: inherit; }
+    .refresh-btn:hover { background: #f0f1f3; }
+    #loading { text-align: center; padding: 60px 20px; color: #888; font-size: 14px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid #e0e2e6; border-top-color: #1a6eb5; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #error-msg { display: none; background: #fff0f0; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px 18px; color: #a00; margin-bottom: 20px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .metric-card { background: #fff; border: 1px solid #e4e6ea; border-radius: 10px; padding: 14px 16px; }
+    .metric-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .metric-value { font-size: 24px; font-weight: 600; color: #1a1a2e; line-height: 1.1; }
+    .metric-delta { font-size: 11px; margin-top: 4px; }
     .delta-pos { color: #1a8a5a; }
     .delta-neg { color: #cc2200; }
-
-    /* Filter row */
-    #filter-row {
-      display: none;
-      gap: 8px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .filter-label {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .filter-btn {
-      font-size: 12px;
-      padding: 4px 12px;
-      border: 1px solid #d0d3d9;
-      border-radius: 99px;
-      cursor: pointer;
-      background: #fff;
-      color: #555;
-    }
-
-    .filter-btn.active {
-      background: #1a6eb5;
-      color: #fff;
-      border-color: #1a6eb5;
-    }
-
-    /* Table */
-    #table-wrap {
-      display: none;
-      background: #fff;
-      border: 1px solid #e4e6ea;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    thead th {
-      background: #f5f6f8;
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 1px solid #e4e6ea;
-      font-weight: 600;
-      color: #555;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
-    }
-
-    tbody td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #f0f1f3;
-      vertical-align: middle;
-    }
-
+    .section-label { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .behavior-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .behavior-card { background: #fff; border: 1px solid #e4e6ea; border-radius: 10px; padding: 12px 14px; }
+    .behavior-name { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .behavior-count { font-size: 20px; font-weight: 600; color: #1a1a2e; }
+    .behavior-bar-bg { height: 4px; background: #f0f1f3; border-radius: 2px; margin-top: 8px; }
+    .behavior-bar-fill { height: 4px; border-radius: 2px; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+    .filter-btn { font-size: 12px; padding: 4px 14px; border: 1px solid #d0d3d9; border-radius: 99px; cursor: pointer; background: #fff; color: #555; font-family: inherit; }
+    .filter-btn:hover { background: #f5f6f8; }
+    .filter-btn.active { background: #1a6eb5; color: #fff; border-color: #1a6eb5; }
+    .table-wrap { background: #fff; border: 1px solid #e4e6ea; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th { background: #f8f9fb; padding: 9px 12px; text-align: left; border-bottom: 1px solid #e4e6ea; font-weight: 600; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid #f2f3f5; vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover td { background: #fafbfd; }
-
-    .score-pill {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-weight: 600;
-      font-size: 12px;
-    }
-
+    .driver-cell { display: flex; align-items: center; gap: 8px; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+    .score-pill { display: inline-block; padding: 3px 9px; border-radius: 99px; font-weight: 600; font-size: 12px; }
     .grade-a { background: #e6f4ec; color: #1a7a3a; }
     .grade-b { background: #e6f0fb; color: #1a5ca0; }
     .grade-c { background: #fef6e0; color: #8a6000; }
     .grade-d { background: #fdecea; color: #a02000; }
-
-    .pos { color: #1a8a5a; }
-    .neg { color: #cc2200; }
-    .warn { color: #cc7700; }
-
-    .refresh-btn {
-      font-size: 12px;
-      padding: 5px 14px;
-      border: 1px solid #d0d3d9;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #fff;
-      color: #444;
-      margin-left: auto;
-      display: block;
-      margin-bottom: 12px;
-    }
-
-    .refresh-btn:hover { background: #f5f6f8; }
+    .pos { color: #1a8a5a; font-weight: 500; }
+    .neg { color: #cc2200; font-weight: 500; }
+    .warn { color: #cc7700; font-weight: 500; }
+    .cam-badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px; background: #f0f1f3; border: 1px solid #e0e2e6; color: #666; white-space: nowrap; margin-right: 3px; }
+    .no-results { text-align: center; padding: 32px; color: #aaa; font-size: 13px; }
   </style>
 </head>
 <body>
 
-  <div id="loading">Loading driver data&hellip;</div>
-  <div id="error-msg"></div>
-
-  <div id="fleet-summary"></div>
-
-  <div id="filter-row">
-    <span class="filter-label">Show:</span>
-    <button class="filter-btn active" onclick="applyFilter('all', this)">All drivers</button>
-    <button class="filter-btn" onclick="applyFilter('risk', this)">At-risk (D)</button>
-    <button class="filter-btn" onclick="applyFilter('cam', this)">Camera events</button>
-    <button class="filter-btn" onclick="applyFilter('top', this)">Top performers</button>
-    <button class="refresh-btn" onclick="reload()">Refresh</button>
+  <div class="header">
+    <div>
+      <div class="header-title">Driver Behavior Dashboard</div>
+      <div class="header-sub" id="header-sub">Loading&hellip;</div>
+    </div>
+    <button class="refresh-btn" onclick="reload()">&#8635; Refresh</button>
   </div>
 
-  <div id="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Driver</th>
-          <th>Score</th>
-          <th>Grade</th>
-          <th>vs Prev Mo</th>
-          <th>YTD</th>
-          <th>vs YTD</th>
-          <th>Miles</th>
-          <th>Speeding</th>
-          <th>Braking</th>
-          <th>Accel</th>
-          <th>Distraction</th>
-          <th>Phone</th>
-          <th>Camera</th>
-        </tr>
-      </thead>
-      <tbody id="driver-tbody"></tbody>
-    </table>
+  <div id="error-msg"></div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    Loading driver data&hellip;
+  </div>
+
+  <div id="main" style="display:none;">
+    <div class="metrics-grid" id="metrics-grid"></div>
+    <div class="section-label">Behavior events — 30-day totals</div>
+    <div class="behavior-grid" id="behavior-grid"></div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="applyFilter('all',this)">All drivers</button>
+      <button class="filter-btn" onclick="applyFilter('risk',this)">At-risk (D)</button>
+      <button class="filter-btn" onclick="applyFilter('cam',this)">Camera events</button>
+      <button class="filter-btn" onclick="applyFilter('top',this)">Top performers</button>
+    </div>
+    <div class="section-label">Driver scorecard</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Driver</th>
+            <th style="width:8%">Score</th>
+            <th style="width:8%">Grade</th>
+            <th style="width:10%">vs Prev Mo</th>
+            <th style="width:8%">YTD</th>
+            <th style="width:8%">vs YTD</th>
+            <th style="width:8%">Miles</th>
+            <th style="width:7%">Speeding</th>
+            <th style="width:7%">Braking</th>
+            <th style="width:7%">Accel</th>
+            <th style="width:7%">Distract.</th>
+            <th style="width:7%">Phone</th>
+            <th style="width:8%">Camera</th>
+          </tr>
+        </thead>
+        <tbody id="driver-tbody"></tbody>
+      </table>
+    </div>
   </div>
 
   <script src="dashboard.js"></script>
-
   <script>
-    var ALL_ROWS = [];
-    var FLEET    = {};
-    var API_REF  = null;
+    var ALL_ROWS = [], ALL_FLEET = {}, API_REF = null;
 
-    // ---- Geotab Add-In registration ----------------------------
+    var AVATAR_COLORS = [
+      {bg:"#e6f0fb",fg:"#1a5ca0"},{bg:"#e6f4ec",fg:"#1a7a3a"},
+      {bg:"#fef6e0",fg:"#8a6000"},{bg:"#eeedf8",fg:"#4a42a0"},
+      {bg:"#e0f5ee",fg:"#0a5040"},{bg:"#fdecea",fg:"#a02000"}
+    ];
+
+    var BEHAVIOR_META = [
+      {key:"Speeding",            label:"Speeding",        color:"#e24b4a"},
+      {key:"HarshBraking",        label:"Hard braking",    color:"#ba7517"},
+      {key:"HarshAcceleration",   label:"Hard accel.",     color:"#d85a30"},
+      {key:"DistractedDriving",   label:"Distracted drv.", color:"#7f77dd"},
+      {key:"HandheldCellphoneUse",label:"Phone use",       color:"#e24b4a"},
+      {key:"SeatbeltViolation",   label:"Seat belt",       color:"#888780"},
+      {key:"HarshCornering",      label:"Hard cornering",  color:"#d85a30"},
+      {key:"DriverFatigue",       label:"Driver fatigue",  color:"#a32d2d"}
+    ];
+
     geotab.addin.DriverBehaviorDashboard = function() {
       return {
         initialize: function(api, state, callback) {
@@ -229,23 +139,20 @@
       };
     };
 
-    // ---- Data loading ------------------------------------------
     function loadData(callback) {
       document.getElementById("loading").style.display = "block";
-      document.getElementById("fleet-summary").style.display = "none";
-      document.getElementById("filter-row").style.display = "none";
-      document.getElementById("table-wrap").style.display = "none";
+      document.getElementById("main").style.display = "none";
       document.getElementById("error-msg").style.display = "none";
-
+      document.getElementById("header-sub").textContent = "Loading\u2026";
       runDashboard(API_REF, function(rows, fleet) {
-        ALL_ROWS = rows;
-        FLEET    = fleet;
-        renderFleet(fleet);
+        ALL_ROWS = rows; ALL_FLEET = fleet;
+        renderMetrics(fleet);
+        renderBehaviors(rows);
         renderTable(rows);
         document.getElementById("loading").style.display = "none";
-        document.getElementById("fleet-summary").style.display = "flex";
-        document.getElementById("filter-row").style.display = "flex";
-        document.getElementById("table-wrap").style.display = "block";
+        document.getElementById("main").style.display = "block";
+        document.getElementById("header-sub").textContent =
+          "Last 30 days \u00b7 " + fleet.driverCount + " active drivers \u00b7 Updated " + now();
         if (typeof callback === "function") { callback(); }
       }, function(err) {
         document.getElementById("loading").style.display = "none";
@@ -256,82 +163,106 @@
       });
     }
 
-    function reload() {
-      loadData(null);
+    function reload() { loadData(null); }
+
+    function now() {
+      return new Date().toLocaleString("en-US", {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     }
 
-    // ---- Fleet summary cards -----------------------------------
-    function renderFleet(f) {
-      var prevSign  = parseFloat(f.changePrev) >= 0 ? "pos" : "neg";
-      var ytdSign   = parseFloat(f.changeYtd)  >= 0 ? "pos" : "neg";
-      var incSign   = parseFloat(f.incidentsChange) <= 0 ? "pos" : "neg";
-
-      document.getElementById("fleet-summary").innerHTML =
-        metricCard("Fleet score (30d)",   f.score30,   f.changePrev + " vs prev mo", prevSign) +
-        metricCard("Prev month avg",      f.scorePrev, null, null) +
-        metricCard("YTD average",         f.scoreYtd,  f.changeYtd  + " vs YTD",    ytdSign) +
-        metricCard("Incidents (30d)",     f.incidents30, f.incidentsChange + " vs prev mo", incSign) +
-        metricCard("Camera events (30d)", f.cameraEvents, null, null) +
-        metricCard("Active drivers",      f.driverCount,  null, null);
+    function renderMetrics(f) {
+      var prevPos = parseFloat(f.changePrev) >= 0;
+      var ytdPos  = parseFloat(f.changeYtd)  >= 0;
+      var incPos  = parseFloat(f.incidentsChange) <= 0;
+      var cards = [
+        {label:"Fleet score (30d)",   value:f.score30,      delta:f.changePrev+" vs prev month", pos:prevPos},
+        {label:"Prev month avg",      value:f.scorePrev,    delta:null},
+        {label:"YTD average",         value:f.scoreYtd,     delta:f.changeYtd+" vs YTD", pos:ytdPos},
+        {label:"Total incidents",     value:f.incidents30,  delta:f.incidentsChange+" vs prev month", pos:incPos},
+        {label:"Camera events (30d)", value:f.cameraEvents, delta:null},
+        {label:"Active drivers",      value:f.driverCount,  delta:null}
+      ];
+      var html = "", i, c;
+      for (i = 0; i < cards.length; i++) {
+        c = cards[i];
+        html += '<div class="metric-card"><div class="metric-label">'+c.label+'</div>' +
+          '<div class="metric-value">'+c.value+'</div>' +
+          (c.delta ? '<div class="metric-delta '+(c.pos?"delta-pos":"delta-neg")+'">'+c.delta+'</div>' : '') +
+          '</div>';
+      }
+      document.getElementById("metrics-grid").innerHTML = html;
     }
 
-    function metricCard(label, value, delta, deltaClass) {
-      var deltaHtml = delta
-        ? '<div class="metric-delta ' + deltaClass + '">' + delta + '</div>'
-        : '';
-      return '<div class="metric-card">' +
-        '<div class="metric-label">' + label + '</div>' +
-        '<div class="metric-value">' + value + '</div>' +
-        deltaHtml +
-        '</div>';
-    }
-
-    // ---- Driver table ------------------------------------------
-    function renderTable(rows) {
-      var i, r, tbody = "", gradeClass, prevClass, ytdClass, spClass, bkClass, diClass;
+    function renderBehaviors(rows) {
+      var totals = {}, i, r;
+      for (i = 0; i < BEHAVIOR_META.length; i++) { totals[BEHAVIOR_META[i].key] = 0; }
       for (i = 0; i < rows.length; i++) {
         r = rows[i];
-        gradeClass = "grade-" + r.Grade.toLowerCase();
-        prevClass  = r.vsPrevMo.charAt(0) === "+" ? "pos" : "neg";
-        ytdClass   = r.vsYTD.charAt(0)   === "+" ? "pos" : "neg";
-        spClass    = r.Speeding    > 8 ? "warn" : "";
-        bkClass    = r.Braking     > 8 ? "warn" : "";
-        diClass    = r.Distraction > 4 ? "warn" : "";
-
-        tbody +=
-          "<tr>" +
-          "<td>" + r.Name + "</td>" +
-          "<td><span class='score-pill " + gradeClass + "'>" + r.Score + "</span></td>" +
-          "<td><span class='score-pill " + gradeClass + "'>" + r.Grade + "</span></td>" +
-          "<td class='" + prevClass + "'>" + r.vsPrevMo + "</td>" +
-          "<td>" + r.YTD + "</td>" +
-          "<td class='" + ytdClass + "'>" + r.vsYTD + "</td>" +
-          "<td>" + r.Miles + "</td>" +
-          "<td class='" + spClass + "'>" + r.Speeding + "</td>" +
-          "<td class='" + bkClass + "'>" + r.Braking + "</td>" +
-          "<td>" + r.Accel + "</td>" +
-          "<td class='" + diClass + "'>" + r.Distraction + "</td>" +
-          "<td>" + r.Phone + "</td>" +
-          "<td>" + r.Camera + "</td>" +
-          "</tr>";
+        totals["Speeding"]             += r.Speeding    || 0;
+        totals["HarshBraking"]         += r.Braking     || 0;
+        totals["HarshAcceleration"]    += r.Accel       || 0;
+        totals["DistractedDriving"]    += r.Distraction || 0;
+        totals["HandheldCellphoneUse"] += r.Phone       || 0;
       }
-      document.getElementById("driver-tbody").innerHTML = tbody;
+      var counts = [], m;
+      for (i = 0; i < BEHAVIOR_META.length; i++) { counts.push(totals[BEHAVIOR_META[i].key] || 0); }
+      var maxVal = Math.max.apply(null, counts.concat([1]));
+      var html = "";
+      for (i = 0; i < BEHAVIOR_META.length; i++) {
+        m = BEHAVIOR_META[i];
+        var pct = Math.round((counts[i] / maxVal) * 100);
+        html += '<div class="behavior-card"><div class="behavior-name">'+m.label+'</div>' +
+          '<div class="behavior-count">'+counts[i]+'</div>' +
+          '<div class="behavior-bar-bg"><div class="behavior-bar-fill" style="width:'+pct+'%;background:'+m.color+'"></div></div>' +
+          '</div>';
+      }
+      document.getElementById("behavior-grid").innerHTML = html;
     }
 
-    // ---- Filters -----------------------------------------------
+    function renderTable(rows) {
+      if (!rows.length) {
+        document.getElementById("driver-tbody").innerHTML =
+          '<tr><td colspan="13" class="no-results">No drivers match this filter.</td></tr>';
+        return;
+      }
+      var html = "", i, r, ac, initials, gc, camHtml;
+      for (i = 0; i < rows.length; i++) {
+        r        = rows[i];
+        ac       = AVATAR_COLORS[i % AVATAR_COLORS.length];
+        initials = r.Name.split(" ").map(function(w){return w.charAt(0);}).join("").slice(0,2).toUpperCase();
+        gc       = "grade-" + r.Grade.toLowerCase();
+        camHtml  = r.Camera > 0
+          ? '<span class="cam-badge">'+r.Camera+' event'+(r.Camera>1?"s":"")+'</span>'
+          : '<span style="color:#ccc;">&mdash;</span>';
+        html +=
+          "<tr><td><div class='driver-cell'>" +
+            "<div class='avatar' style='background:"+ac.bg+";color:"+ac.fg+"'>"+initials+"</div>" +
+            "<span>"+r.Name+"</span></div></td>" +
+          "<td><span class='score-pill "+gc+"'>"+r.Score+"</span></td>" +
+          "<td><span class='score-pill "+gc+"'>"+r.Grade+"</span></td>" +
+          "<td class='"+(r.vsPrevMo.charAt(0)==="+"?"pos":"neg")+"'>"+r.vsPrevMo+"</td>" +
+          "<td>"+r.YTD+"</td>" +
+          "<td class='"+(r.vsYTD.charAt(0)==="+"?"pos":"neg")+"'>"+r.vsYTD+"</td>" +
+          "<td>"+r.Miles+"</td>" +
+          "<td class='"+(r.Speeding>8?"warn":"")+"'>"+r.Speeding+"</td>" +
+          "<td class='"+(r.Braking>8?"warn":"")+"'>"+r.Braking+"</td>" +
+          "<td>"+r.Accel+"</td>" +
+          "<td class='"+(r.Distraction>4?"warn":"")+"'>"+r.Distraction+"</td>" +
+          "<td>"+r.Phone+"</td>" +
+          "<td>"+camHtml+"</td></tr>";
+      }
+      document.getElementById("driver-tbody").innerHTML = html;
+    }
+
     function applyFilter(type, btn) {
-      var btns = document.querySelectorAll(".filter-btn");
-      var i;
+      var btns = document.querySelectorAll(".filter-btn"), i;
       for (i = 0; i < btns.length; i++) { btns[i].classList.remove("active"); }
       btn.classList.add("active");
-
-      var filtered = ALL_ROWS;
-      if (type === "risk")  { filtered = ALL_ROWS.filter(function(r) { return r.Grade === "D"; }); }
-      if (type === "cam")   { filtered = ALL_ROWS.filter(function(r) { return r.Camera > 0; }); }
-      if (type === "top")   { filtered = ALL_ROWS.filter(function(r) { return r.Score >= 85; }); }
-      renderTable(filtered);
+      var f = ALL_ROWS;
+      if (type==="risk") { f = ALL_ROWS.filter(function(r){return r.Grade==="D";}); }
+      if (type==="cam")  { f = ALL_ROWS.filter(function(r){return r.Camera>0;}); }
+      if (type==="top")  { f = ALL_ROWS.filter(function(r){return r.Score>=85;}); }
+      renderTable(f);
     }
   </script>
-
 </body>
 </html>
